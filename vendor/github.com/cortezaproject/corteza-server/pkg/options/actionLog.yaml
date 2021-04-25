@@ -1,0 +1,15 @@
+docs:
+  title: Actionlog
+
+props:
+  - name: enabled
+    type: bool
+    default: true
+    docs:
+      description: Enable action logging.
+
+  - name: debug
+    type: bool
+    default: false
+    docs:
+      description: Enable debug action logging.

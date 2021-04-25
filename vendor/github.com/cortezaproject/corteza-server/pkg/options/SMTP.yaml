@@ -1,0 +1,31 @@
+docs:
+  title: Email sending
+  intro: |-
+    Configure your local SMTP server or use one of the available providers
+
+props:
+  - name: host
+    default: "localhost"
+    description: |-
+      The SMTP server hostname.
+
+  - name: port
+    type: int
+    default: 25
+    description: The SMTP post.
+
+  - name: user
+    description: The SMTP username.
+
+  - name: pass
+    description: The SMTP password.
+
+  - name: from
+    description: The SMTP `from` email parameter
+
+  - name: tlsInsecure
+    type: bool
+    default: false
+    description: Allow insecure (invalid, expired TLS certificates) connections.
+
+  - name: tlsServerName

@@ -1,6 +1,3 @@
-[![Build Status](https://drone.crust.tech/api/badges/cortezaproject/corteza/status.svg)](https://drone.crust.tech/cortezaproject/corteza)
-[![Go Report Card](https://goreportcard.com/badge/github.com/cortezaproject/corteza-server)](https://goreportcard.com/report/github.com/cortezaproject/corteza-server)
-
 # What is Corteza?
 
 Corteza brings your user ecosystem and essential applications together on one 
