@@ -5,22 +5,20 @@
 
   <div align="center">
 
-  [![DockerHub Downloads Card](https://img.shields.io/docker/pulls/cortezaproject/corteza-discovery-searcher)](https://img.shields.io/docker/pulls/cortezaproject/corteza-discovery-searcher)
-  [![Latest Version Card](https://img.shields.io/github/v/tag/cortezaproject/corteza-discovery-searcher?label=stable%20version)](https://img.shields.io/github/v/tag/cortezaproject/corteza-discovery-searcher?label=stable%20version)
-  [![License Card](https://img.shields.io/github/license/cortezaproject/corteza-discovery-searcher)](https://img.shields.io/github/license/cortezaproject/corteza-discovery-searcher)
+  [![DockerHub Downloads Card](https://img.shields.io/docker/pulls/cortezaproject/corteza-discovery-indexer)](https://img.shields.io/docker/pulls/cortezaproject/corteza-discovery-indexer)
+  [![Latest Version Card](https://img.shields.io/github/v/tag/cortezaproject/corteza-discovery-indexer?label=stable%20version)](https://img.shields.io/github/v/tag/cortezaproject/corteza-discovery-indexer?label=stable%20version)
+  [![License Card](https://img.shields.io/github/license/cortezaproject/corteza-discovery-indexer)](https://img.shields.io/github/license/cortezaproject/corteza-discovery-indexer)
 
-  [![Go Report Card](https://goreportcard.com/badge/github.com/cortezaproject/corteza-discovery-searcher)](https://goreportcard.com/report/github.com/cortezaproject/corteza-discovery-searcher)
+  [![Go Report Card](https://goreportcard.com/badge/github.com/cortezaproject/corteza-discovery-indexer)](https://goreportcard.com/report/github.com/cortezaproject/corteza-discovery-indexer)
   [![Build Status](https://drone.crust.tech/api/badges/cortezaproject/corteza/status.svg)](https://drone.crust.tech/cortezaproject/corteza)
-  [![CodeCov Report Card](https://img.shields.io/codecov/c/github/cortezaproject/corteza-discovery-searcher)](https://img.shields.io/codecov/c/github/cortezaproject/corteza-discovery-searcher)
+  [![CodeCov Report Card](https://img.shields.io/codecov/c/github/cortezaproject/corteza-discovery-indexer)](https://img.shields.io/codecov/c/github/cortezaproject/corteza-discovery-indexer)
 
   </div>
 </h1>
 
 <br />
 
-**Corteza discovery indexer** is the ...
-
-**DevNote**: @todo...
+**Corteza discovery indexer** microservice for pulling indexable resources from Corteza's and pushing them into ElasticSearch. 
 
 <br />
 
@@ -61,7 +59,7 @@ Quick references:
 
 ## Upgrading Corteza
 
-[![Latest Version Card](https://img.shields.io/github/v/tag/cortezaproject/corteza-discovery-searcher?label=latest%20stable%20version)](https://img.shields.io/github/v/tag/cortezaproject/corteza-discovery-searcher?label=latest%20stable%20version)
+[![Latest Version Card](https://img.shields.io/github/v/tag/cortezaproject/corteza-discovery-indexer?label=latest%20stable%20version)](https://img.shields.io/github/v/tag/cortezaproject/corteza-discovery-indexer?label=latest%20stable%20version)
 
 Refer to the [changelog](https://docs.cortezaproject.org/corteza-docs/2021.6/changelog/index.html) and the [upgrade guide](https://docs.cortezaproject.org/corteza-docs/2021.6/upgrade-guide/index.html) to upgrade your Corteza instance.
 
@@ -86,7 +84,7 @@ Quick references:
 
 ## Contributing
 
-Refer to the [Developer Guide/Corteza Server](https://docs.cortezaproject.org/corteza-docs/2021.6/developer-guide/corteza-discovery-searcher/index.html) document for details regarding the [development setup](https://docs.cortezaproject.org/corteza-docs/2021.6/developer-guide/corteza-discovery-searcher/index.html#_development_setup), the [project structure](https://docs.cortezaproject.org/corteza-docs/2021.6/developer-guide/corteza-discovery-searcher/structure.html), and the feature insight documents.
+Refer to the [Developer Guide/Corteza Server](https://docs.cortezaproject.org/corteza-docs/2021.6/developer-guide/corteza-discovery-indexer/index.html) document for details regarding the [development setup](https://docs.cortezaproject.org/corteza-docs/2021.6/developer-guide/corteza-discovery-indexer/index.html#_development_setup), the [project structure](https://docs.cortezaproject.org/corteza-docs/2021.6/developer-guide/corteza-discovery-indexer/structure.html), and the feature insight documents.
 
 Refer to the [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and code of conduct.
 
