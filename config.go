@@ -10,7 +10,8 @@ import (
 
 type (
 	config struct {
-		es struct {
+		httpAddr string
+		es       struct {
 			addresses []string
 		}
 		cortezaAuth         string
@@ -25,10 +26,16 @@ type (
 	}
 )
 
+const (
+	envKeyHttpAddr = "HTTP_ADDR"
+)
+
 func getConfig() (*config, error) {
 	c := &config{}
 	return c, func() error {
 		baseUrl := options.EnvString("CORTEZA_SERVER_BASE_URL", "http://server:80")
+
+		c.httpAddr = options.EnvString(envKeyHttpAddr, "127.0.0.1:3201")
 
 		c.cortezaAuth = options.EnvString("CORTEZA_SERVER_AUTH", baseUrl+"/auth")
 		if c.cortezaAuth == "" {
