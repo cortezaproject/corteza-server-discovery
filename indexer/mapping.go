@@ -49,7 +49,7 @@ type (
 	}
 )
 
-// fetches mappings from discovery server and
+// Mappings fetches mappings from discovery server and
 func Mappings(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, api *apiClient, indexPrefix string) (err error) {
 	var (
 		req             *http.Request
@@ -62,7 +62,7 @@ func Mappings(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, a
 	)
 
 	if req, err = api.mappings(); err != nil {
-		return fmt.Errorf("failed to prepare request: %w", err)
+		return fmt.Errorf("failed to prepare mapping request: %w", err)
 	}
 
 	//d, _ := httputil.DumpRequest(req, true)

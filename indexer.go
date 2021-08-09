@@ -26,11 +26,10 @@ func main() {
 	api, err := indexer.ApiClient(cfg.cortezaDiscoveryAPI, cfg.cortezaAuth, cfg.schemas[0].clientKey, cfg.schemas[0].clientSecret)
 	cli.HandleError(err)
 
-	//
 	esc, err := indexer.EsClient(cfg.es.addresses)
 	cli.HandleError(err)
 
-	//cli.HandleError(indexer.Mappings(ctx, log, esc, api, "private"))
+	cli.HandleError(indexer.Mappings(ctx, log, esc, api, "private"))
 
 	esb, err := indexer.EsBulk(esc)
 	cli.HandleError(err)
