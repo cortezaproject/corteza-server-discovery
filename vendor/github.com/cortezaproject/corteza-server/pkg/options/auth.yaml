@@ -1,6 +1,5 @@
 imports:
   - time
-  - strings
 
 docs:
   title: Authentication
@@ -10,6 +9,18 @@ props:
     type: bool
     description: |-
       Enable extra logging for authentication flows
+
+  - name: passwordSecurity
+    type: bool
+    default: true
+    description: |-
+      Password security allows you to disable constraints to which passwords must conform to.
+      
+      [CAUTION]
+      ====
+      Disabling password security can be useful for development environments as it removes the need for complex passwords.
+      Password security *should be enabled* on production environments to avoid security incidents
+      ====
 
   - name: secret
     env: AUTH_JWT_SECRET
@@ -23,6 +34,18 @@ props:
       Generated secret will change if you change any of these variables.
       ====
 
+  - name: accessTokenLifetime
+    type: time.Duration
+    env: AUTH_OAUTH2_ACCESS_TOKEN_LIFETIME
+    default: time.Hour * 2
+    description: Access token lifetime
+
+  - name: refreshTokenLifetime
+    type: time.Duration
+    env: AUTH_OAUTH2_REFRESH_TOKEN_LIFETIME
+    default: time.Hour * 24 * 3
+    description: Refresh token lifetime
+
   - name: expiry
     type: time.Duration
     env: AUTH_JWT_EXPIRY
@@ -30,11 +53,11 @@ props:
     description: Experation time for the auth JWT tokens.
 
   - name: externalRedirectURL
-    default: guessBaseURL() + "/auth/external/{provider}/callback"
+    default: fullURL("/auth/external/{provider}/callback")
     description: |-
       Redirect URL to be sent with OAuth2 authentication request to provider
 
-      `{provider}` placeholder is replaced with the actual value when used.
+      `provider` placeholder is replaced with the actual value when used.
 
   - name: externalCookieSecret
     default: getSecretFromEnv("external cookie secret")
@@ -48,9 +71,10 @@ props:
       ====
 
   - name: baseURL
-    default: guessBaseURL() + "/auth"
+    default: fullURL("/auth")
     description: |-
-      Frontend base URL. Must be an absolute URL
+      Frontend base URL. Must be an absolute URL, with the domain.
+      This is used for some redirects and links in auth emails.
 
   - name: sessionCookieName
     default: "session"
@@ -58,7 +82,7 @@ props:
       Session cookie name
 
   - name: sessionCookiePath
-    default: "/auth"
+    default: pathPrefix("/auth")
     description: |-
       Session cookie path
 
@@ -69,9 +93,9 @@ props:
 
   - name: sessionCookieSecure
     type: bool
-    default: strings.HasPrefix(guessBaseURL(), "https://")
+    default: isSecure()
     description: |-
-      Defaults to true when HTTPS is used.
+      Defaults to true when HTTPS is used. Corteza will try to guess the this setting by
 
   - name: sessionLifetime
     type: time.Duration
@@ -93,7 +117,7 @@ props:
 
   - name: requestRateLimit
     type: int
-    default: 30
+    default: 60
     description: |-
       How many requests from a cerain IP address are allowed in a time window.
       Set to zero to disable
@@ -115,11 +139,16 @@ props:
       Generated secret will change if you change any of these variables.
       ====
 
+  - name: csrfEnabled
+    type: bool
+    default: true
+    description: |-
+      Enable CSRF protection
+
   - name: csrfFieldName
     default: "same-site-authenticity-token"
     description: |-
       Form field name used for CSRF protection
-
 
   - name: csrfCookieName
     default: "same-site-authenticity-token"
@@ -143,7 +172,6 @@ props:
       If not it uses statically embedded files.
 
       When empty path is set (default value), embedded files are used.
-
 
   - name: developmentMode
     type: bool

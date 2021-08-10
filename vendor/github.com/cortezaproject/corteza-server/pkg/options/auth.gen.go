@@ -9,14 +9,16 @@ package options
 // pkg/options/auth.yaml
 
 import (
-	"strings"
 	"time"
 )
 
 type (
 	AuthOpt struct {
 		LogEnabled               bool          `env:"AUTH_LOG_ENABLED"`
+		PasswordSecurity         bool          `env:"AUTH_PASSWORD_SECURITY"`
 		Secret                   string        `env:"AUTH_JWT_SECRET"`
+		AccessTokenLifetime      time.Duration `env:"AUTH_OAUTH2_ACCESS_TOKEN_LIFETIME"`
+		RefreshTokenLifetime     time.Duration `env:"AUTH_OAUTH2_REFRESH_TOKEN_LIFETIME"`
 		Expiry                   time.Duration `env:"AUTH_JWT_EXPIRY"`
 		ExternalRedirectURL      string        `env:"AUTH_EXTERNAL_REDIRECT_URL"`
 		ExternalCookieSecret     string        `env:"AUTH_EXTERNAL_COOKIE_SECRET"`
@@ -31,6 +33,7 @@ type (
 		RequestRateLimit         int           `env:"AUTH_REQUEST_RATE_LIMIT"`
 		RequestRateWindowLength  time.Duration `env:"AUTH_REQUEST_RATE_WINDOW_LENGTH"`
 		CsrfSecret               string        `env:"AUTH_CSRF_SECRET"`
+		CsrfEnabled              bool          `env:"AUTH_CSRF_ENABLED"`
 		CsrfFieldName            string        `env:"AUTH_CSRF_FIELD_NAME"`
 		CsrfCookieName           string        `env:"AUTH_CSRF_COOKIE_NAME"`
 		DefaultClient            string        `env:"AUTH_DEFAULT_CLIENT"`
@@ -42,21 +45,25 @@ type (
 // Auth initializes and returns a AuthOpt with default values
 func Auth() (o *AuthOpt) {
 	o = &AuthOpt{
+		PasswordSecurity:         true,
 		Secret:                   getSecretFromEnv("jwt secret"),
+		AccessTokenLifetime:      time.Hour * 2,
+		RefreshTokenLifetime:     time.Hour * 24 * 3,
 		Expiry:                   time.Hour * 24 * 30,
-		ExternalRedirectURL:      guessBaseURL() + "/auth/external/{provider}/callback",
+		ExternalRedirectURL:      fullURL("/auth/external/{provider}/callback"),
 		ExternalCookieSecret:     getSecretFromEnv("external cookie secret"),
-		BaseURL:                  guessBaseURL() + "/auth",
+		BaseURL:                  fullURL("/auth"),
 		SessionCookieName:        "session",
-		SessionCookiePath:        "/auth",
+		SessionCookiePath:        pathPrefix("/auth"),
 		SessionCookieDomain:      guessHostname(),
-		SessionCookieSecure:      strings.HasPrefix(guessBaseURL(), "https://"),
+		SessionCookieSecure:      isSecure(),
 		SessionLifetime:          24 * time.Hour,
 		SessionPermLifetime:      360 * 24 * time.Hour,
 		GarbageCollectorInterval: 15 * time.Minute,
-		RequestRateLimit:         30,
+		RequestRateLimit:         60,
 		RequestRateWindowLength:  time.Minute,
 		CsrfSecret:               getSecretFromEnv("csrf secret"),
+		CsrfEnabled:              true,
 		CsrfFieldName:            "same-site-authenticity-token",
 		CsrfCookieName:           "same-site-authenticity-token",
 		DefaultClient:            "corteza-webapp",
