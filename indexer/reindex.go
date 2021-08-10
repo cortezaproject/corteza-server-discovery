@@ -81,7 +81,7 @@ func ReindexAll(ctx context.Context, log *zap.Logger, esb esutil.BulkIndexer, ap
 		index:    "compose-namespaces",
 		callback: postProcNamespaces,
 	}
-	fmt.Errorf("blockoing error")
+	_ = fmt.Errorf("blockoing error")
 	return <-bErr
 }
 
@@ -173,7 +173,7 @@ func reindex(ctx context.Context, log *zap.Logger, esb esutil.BulkIndexer, api *
 		}
 
 		if req, err = api.resources(ds.endpoint, qs); err != nil {
-			return fmt.Errorf("failed to prepare request: %w", err)
+			return fmt.Errorf("failed to prepare resource request: %w", err)
 		}
 
 		if rsp, err = httpClient().Do(req.WithContext(ctx)); err != nil {

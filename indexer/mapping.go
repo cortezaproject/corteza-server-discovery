@@ -27,8 +27,8 @@ type (
 	reqMapping struct {
 		// @todo settings
 		Mappings struct {
-			Properties map[string]*property `json:"properties"`
-		} `json:"mappings"`
+			Properties map[string]*property `json:"properties,omitempty"`
+		} `json:"mappings,omitempty"`
 	}
 
 	mapping struct {
@@ -76,7 +76,7 @@ func Mappings(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, a
 		return fmt.Errorf("request resulted in an unexpected status: %s", rsp.Status)
 	}
 
-	//d, _ = httputil.DumpResponse(rsp, true)
+	//d, _ := httputil.DumpResponse(rsp, true)
 	//println(string(d))
 
 	if err = json.NewDecoder(rsp.Body).Decode(rspPayload); err != nil {
@@ -115,8 +115,13 @@ func Mappings(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, a
 			continue
 		}
 
-		if esRsp, err = esc.Indices.Create(index, esc.Indices.Create.WithBody(buf)); err != nil {
-			iLog.Error("index creation failed", zap.Error(err))
+		if esRsp, err = esc.Indices.Create(index, esc.Indices.Create.WithBody(buf)); esRsp.IsError() || err != nil {
+			if err != nil {
+				iLog.Error("index creation failed", zap.Error(err))
+			}
+			if len(esRsp.String()) > 0 {
+				iLog.Error(fmt.Sprintf("index creation failed due to %s", esRsp.String()))
+			}
 			continue
 		}
 
