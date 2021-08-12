@@ -1,4 +1,4 @@
-package indexer
+package api
 
 import (
 	"encoding/json"
@@ -20,32 +20,40 @@ type (
 		secret      string
 	}
 
-	apiClient struct {
+	client struct {
 		baseUri     string
 		credentials *credentials
 	}
+
+	ClientService interface {
+		HttpClient() *http.Client
+		Mappings() (*http.Request, error)
+		Resources(string, url.Values) (*http.Request, error)
+		Request(string) (*http.Request, error)
+		Authenticate() error
+	}
 )
 
-func httpClient() *http.Client {
-	return http.DefaultClient
-}
-
-func ApiClient(apiBaseUri, authBaseUri, key, secret string) (c *apiClient, err error) {
-	c = &apiClient{baseUri: apiBaseUri}
+func Client(apiBaseUri, authBaseUri, key, secret string) (c *client, err error) {
+	c = &client{baseUri: apiBaseUri}
 	c.credentials = &credentials{authBaseUri: authBaseUri, key: key, secret: secret}
 	return c, err
 }
 
-func (c *apiClient) mappings() (*http.Request, error) {
-	return c.request(c.baseUri + "/mappings/")
+func (*client) HttpClient() *http.Client {
+	return http.DefaultClient
 }
 
-func (c *apiClient) resources(endpoint string, qs url.Values) (*http.Request, error) {
-	return c.request(c.baseUri + "/resources/" + strings.TrimLeft(endpoint, "/") + "?" + qs.Encode())
+func (c *client) Mappings() (*http.Request, error) {
+	return c.Request(c.baseUri + "/mappings/")
 }
 
-func (c *apiClient) request(endpoint string) (req *http.Request, err error) {
-	if err = c.authenticate(); err != nil {
+func (c *client) Resources(endpoint string, qs url.Values) (*http.Request, error) {
+	return c.Request(c.baseUri + "/resources/" + strings.TrimLeft(endpoint, "/") + "?" + qs.Encode())
+}
+
+func (c *client) Request(endpoint string) (req *http.Request, err error) {
+	if err = c.Authenticate(); err != nil {
 		return
 	}
 
@@ -59,13 +67,13 @@ func (c *apiClient) request(endpoint string) (req *http.Request, err error) {
 	return
 }
 
-func (c *apiClient) authenticate() (err error) {
+func (c *client) Authenticate() (err error) {
 	if c.credentials == nil {
 		return fmt.Errorf("missing credentials")
 	}
 
 	if c.credentials.expiresAt.Before(time.Now()) {
-		c.credentials, err = authenticate(c.credentials.authBaseUri, c.credentials.key, c.credentials.secret)
+		c.credentials, err = c.authToken()
 		if err != nil {
 			return
 		}
@@ -74,11 +82,14 @@ func (c *apiClient) authenticate() (err error) {
 	return nil
 }
 
-func authenticate(authBaseUri, key, secret string) (crd *credentials, err error) {
+func (c *client) authToken() (crd *credentials, err error) {
 	var (
-		req  *http.Request
-		rsp  *http.Response
-		form = url.Values{}
+		req         *http.Request
+		rsp         *http.Response
+		form        = url.Values{}
+		authBaseUri = c.credentials.authBaseUri
+		key         = c.credentials.key
+		secret      = c.credentials.secret
 	)
 
 	form.Set("grant_type", "client_credentials")
@@ -95,7 +106,7 @@ func authenticate(authBaseUri, key, secret string) (crd *credentials, err error)
 	//d, _ := httputil.DumpRequest(req, true)
 	//println(string(d))
 
-	rsp, err = httpClient().Do(req)
+	rsp, err = c.HttpClient().Do(req)
 	if err != nil {
 		return
 	}

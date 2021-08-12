@@ -1,11 +1,10 @@
-package indexer
+package es
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"go.uber.org/zap"
 	"net/http"
@@ -47,10 +46,24 @@ type (
 
 		Properties map[string]*property `json:"properties,omitempty"`
 	}
+
+	mapper struct {
+		log *zap.Logger
+		es  esService
+		api apiClientService
+	}
 )
 
-// Mappings fetches mappings from discovery server and
-func Mappings(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, api *apiClient, indexPrefix string) (err error) {
+func Mapper(log *zap.Logger, esc esService, api apiClientService) *mapper {
+	return &mapper{
+		log: log,
+		es:  esc,
+		api: api,
+	}
+}
+
+// Mappings fetches mappings from discovery server and update elastic search indexes
+func (m *mapper) Mappings(ctx context.Context, indexPrefix string) (err error) {
 	var (
 		req             *http.Request
 		rsp             *http.Response
@@ -61,14 +74,14 @@ func Mappings(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, a
 		index           string
 	)
 
-	if req, err = api.mappings(); err != nil {
+	if req, err = m.api.Mappings(); err != nil {
 		return fmt.Errorf("failed to prepare mapping request: %w", err)
 	}
 
 	//d, _ := httputil.DumpRequest(req, true)
 	//println(string(d))
 
-	if rsp, err = httpClient().Do(req.WithContext(ctx)); err != nil {
+	if rsp, err = m.api.HttpClient().Do(req.WithContext(ctx)); err != nil {
 		return fmt.Errorf("failed to send request: %w", err)
 	}
 
@@ -86,23 +99,23 @@ func Mappings(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, a
 		return fmt.Errorf("failed to close response body: %w", err)
 	}
 
-	if existingIndexes, err = getExistingIndexes(ctx, esc); err != nil {
+	if existingIndexes, err = m.getExistingIndexes(ctx); err != nil {
 		return fmt.Errorf("failed to fetch existing indexes: %w", err)
 	}
 
-	indexMap := mapExistingIndexes(existingIndexes)
+	indexMap := m.mapExistingIndexes(existingIndexes)
 
-	for _, m := range rspPayload.Response {
+	for _, im := range rspPayload.Response {
 		buf.Reset()
 		esReq := reqMapping{}
-		esReq.Mappings.Properties = m.Properties
+		esReq.Mappings.Properties = im.Properties
 
 		if err = json.NewEncoder(buf).Encode(esReq); err != nil {
 			return
 		}
 
-		index = fmt.Sprintf(indexTpl, indexPrefix, m.Index)
-		iLog := log.With(zap.String("name", index))
+		index = fmt.Sprintf(indexTpl, indexPrefix, im.Index)
+		iLog := m.log.With(zap.String("name", index))
 
 		if e := indexMap[index]; e != nil {
 			iLog.Info("index exists",
@@ -114,6 +127,11 @@ func Mappings(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, a
 
 			continue
 		}
+
+		esc, _ := m.es.EsClient()
+		//if err != nil {
+		//	return
+		//}
 
 		if esRsp, err = esc.Indices.Create(index, esc.Indices.Create.WithBody(buf)); esRsp.IsError() || err != nil {
 			if err != nil {
@@ -132,24 +150,29 @@ func Mappings(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, a
 		iLog.Info("index created")
 	}
 
-	return nil
+	return
 }
 
-func mapExistingIndexes(ii []*esIndex) map[string]*esIndex {
-	m := make(map[string]*esIndex)
+func (m *mapper) mapExistingIndexes(ii []*esIndex) (im map[string]*esIndex) {
+	im = make(map[string]*esIndex)
 	for _, i := range ii {
-		m[i.Name] = i
+		im[i.Name] = i
 	}
 
-	return m
+	return
 }
 
-func getExistingIndexes(ctx context.Context, esc *elasticsearch.Client) (ii []*esIndex, err error) {
+func (m *mapper) getExistingIndexes(ctx context.Context) (ii []*esIndex, err error) {
 	var (
 		esRsp *esapi.Response
 	)
 
 	ii = make([]*esIndex, 100)
+
+	esc, err := m.es.EsClient()
+	if err != nil {
+		return
+	}
 
 	esRsp, err = esc.Cat.Indices(
 		esc.Cat.Indices.WithContext(ctx),

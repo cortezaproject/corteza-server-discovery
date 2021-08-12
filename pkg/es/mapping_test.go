@@ -1,11 +1,8 @@
-package indexer
+package es
 
 import (
-	"context"
 	"fmt"
-	"github.com/cortezaproject/corteza-server/pkg/logger"
 	"github.com/cortezaproject/corteza-server/pkg/options"
-	"github.com/stretchr/testify/require"
 	"os"
 	"strings"
 	"testing"
@@ -35,23 +32,23 @@ const (
 
 // @todo use it properly
 func TestMappings(t *testing.T) {
-	var (
-		ctx = context.Background()
-		log = logger.Default()
-		req = require.New(t)
-	)
+	//var (
+	//	ctx = context.Background()
+	//	log = logger.Default()
+	//	req = require.New(t)
+	//)
+	//
+	//cfg, err := GetConfig()
+	//req.NoError(err)
 
-	cfg, err := GetConfig()
-	req.NoError(err)
-
-	client, err := EsClient(cfg.es.addresses)
-	req.NoError(err)
-
-	api, err := ApiClient(cfg.cortezaDiscoveryAPI, cfg.cortezaAuth, cfg.schemas[0].clientKey, cfg.schemas[0].clientSecret)
-	req.NoError(err)
-
-	err = Mappings(ctx, log, client, api, "private")
-	req.NoError(err)
+	//client, err := Es(cfg.es.addresses)
+	//req.NoError(err)
+	//
+	//api, err := indexer.ApiClient(cfg.cortezaDiscoveryAPI, cfg.cortezaAuth, cfg.schemas[0].clientKey, cfg.schemas[0].clientSecret)
+	//req.NoError(err)
+	//
+	//err = Mappings(ctx, log, client, api, "private")
+	//req.NoError(err)
 }
 
 // @todo reuse existing one

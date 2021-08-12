@@ -1,4 +1,4 @@
-package indexer
+package es
 
 import (
 	"bytes"
@@ -39,16 +39,30 @@ type (
 		Index  string
 		Source json.RawMessage
 	}
+
+	reIndexer struct {
+		log *zap.Logger
+		es  esService
+		api apiClientService
+	}
 )
 
 const (
 	indexTpl = "corteza-%s-%s"
 )
 
-func ReindexAll(ctx context.Context, log *zap.Logger, esb esutil.BulkIndexer, api *apiClient, indexPrefix string) error {
+func ReIndexer(log *zap.Logger, esc esService, api apiClientService) *reIndexer {
+	return &reIndexer{
+		log: log,
+		es:  esc,
+		api: api,
+	}
+}
+
+func (ri reIndexer) ReindexAll(ctx context.Context, indexPrefix string) error {
 	var (
 		srcQueue = make(chan *docsSources, 100)
-		bErr     = reindexManager(ctx, log, esb, api, indexPrefix, srcQueue)
+		bErr     = ri.reindexManager(ctx, indexPrefix, srcQueue)
 	)
 
 	srcQueue <- &docsSources{
@@ -85,7 +99,7 @@ func ReindexAll(ctx context.Context, log *zap.Logger, esb esutil.BulkIndexer, ap
 	return <-bErr
 }
 
-func reindexManager(ctx context.Context, log *zap.Logger, esb esutil.BulkIndexer, api *apiClient, indexPrefix string, srcQueue chan *docsSources) chan error {
+func (ri reIndexer) reindexManager(ctx context.Context, indexPrefix string, srcQueue chan *docsSources) chan error {
 	var qErr = make(chan error)
 	const maxQueueLen = 3
 
@@ -106,22 +120,22 @@ func reindexManager(ctx context.Context, log *zap.Logger, esb esutil.BulkIndexer
 			select {
 			case <-ctx.Done():
 				if ctx.Err() != context.Canceled {
-					log.Error(ctx.Err().Error())
+					ri.log.Error(ctx.Err().Error())
 				} else {
-					log.Info("stopped")
+					ri.log.Info("stopped")
 				}
 				return
 
 			case ds := <-srcQueue:
 				if ds == nil {
 					// graceful termination
-					log.Info("done")
+					ri.log.Info("done")
 					return
 				}
 
-				err := reindex(ctx, log, esb, api, indexPrefix, ds)
+				err := ri.reindex(ctx, indexPrefix, ds)
 				if err != nil {
-					log.Error("failed to reindex", zap.Error(err), zap.String("endpoint", ds.endpoint))
+					ri.log.Error("failed to reindex", zap.Error(err), zap.String("endpoint", ds.endpoint))
 					return
 				}
 
@@ -133,14 +147,19 @@ func reindexManager(ctx context.Context, log *zap.Logger, esb esutil.BulkIndexer
 				}
 
 				if pQueueStaleCount <= 0 {
-					log.Info("idle")
+					ri.log.Info("idle")
 					return
 				}
 
 				pQueueLen = len(srcQueue)
 
+				esb, err := ri.es.EsBulk()
+				if err != nil {
+					return
+				}
+
 				s := esb.Stats()
-				log.Debug("batch indexing stats",
+				ri.log.Debug("batch indexing stats",
 					zap.Uint64("added", s.NumAdded),
 					zap.Uint64("flushed", s.NumFlushed),
 					zap.Uint64("failed", s.NumFailed),
@@ -156,7 +175,7 @@ func reindexManager(ctx context.Context, log *zap.Logger, esb esutil.BulkIndexer
 	return qErr
 }
 
-func reindex(ctx context.Context, log *zap.Logger, esb esutil.BulkIndexer, api *apiClient, indexPrefix string, ds *docsSources) (err error) {
+func (ri reIndexer) reindex(ctx context.Context, indexPrefix string, ds *docsSources) (err error) {
 	var (
 		qs     = url.Values{"limit": []string{"500"}}
 		req    *http.Request
@@ -172,11 +191,11 @@ func reindex(ctx context.Context, log *zap.Logger, esb esutil.BulkIndexer, api *
 			qs.Set("pageCursor", cursor)
 		}
 
-		if req, err = api.resources(ds.endpoint, qs); err != nil {
+		if req, err = ri.api.Resources(ds.endpoint, qs); err != nil {
 			return fmt.Errorf("failed to prepare resource request: %w", err)
 		}
 
-		if rsp, err = httpClient().Do(req.WithContext(ctx)); err != nil {
+		if rsp, err = ri.api.HttpClient().Do(req.WithContext(ctx)); err != nil {
 			return fmt.Errorf("failed to send request: %w", err)
 		}
 
@@ -205,7 +224,7 @@ func reindex(ctx context.Context, log *zap.Logger, esb esutil.BulkIndexer, api *
 
 		var docs int
 		if rspPayload.Error != nil {
-			log.Debug("skipping",
+			ri.log.Debug("skipping",
 				zap.String("index", fmt.Sprintf(indexTpl, indexPrefix, ds.index)),
 				zap.String("error", rspPayload.Error.Message),
 			)
@@ -214,13 +233,18 @@ func reindex(ctx context.Context, log *zap.Logger, esb esutil.BulkIndexer, api *
 			docs = len(rspPayload.Response.Documents)
 		}
 
-		log.Debug("reindexing",
+		ri.log.Debug("reindexing",
 			zap.Int("docs", docs),
 			zap.String("index", fmt.Sprintf(indexTpl, indexPrefix, ds.index)),
 		)
 
 		if docs == 0 {
 			return
+		}
+
+		esb, err := ri.es.EsBulk()
+		if err != nil {
+			return err
 		}
 
 		for _, doc := range rspPayload.Response.Documents {
