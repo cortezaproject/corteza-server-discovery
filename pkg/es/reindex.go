@@ -215,11 +215,11 @@ func (ri reIndexer) reindex(ctx context.Context, indexPrefix string, ds *docsSou
 		//}
 
 		if err = json.NewDecoder(rsp.Body).Decode(rspPayload); err != nil {
-			return fmt.Errorf("failed to decode response: %w", err)
+			return fmt.Errorf("failed to decode reindexing response: %w", err)
 		}
 
 		if err = rsp.Body.Close(); err != nil {
-			return fmt.Errorf("failed to close response body: %w", err)
+			return fmt.Errorf("failed to close reindexing response body: %w", err)
 		}
 
 		var docs int

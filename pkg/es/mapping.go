@@ -93,10 +93,10 @@ func (m *mapper) Mappings(ctx context.Context, indexPrefix string) (err error) {
 	//println(string(d))
 
 	if err = json.NewDecoder(rsp.Body).Decode(rspPayload); err != nil {
-		return fmt.Errorf("failed to decode response: %w", err)
+		return fmt.Errorf("failed to decode mapping response: %w", err)
 	}
 	if err = rsp.Body.Close(); err != nil {
-		return fmt.Errorf("failed to close response body: %w", err)
+		return fmt.Errorf("failed to close mapping response body: %w", err)
 	}
 
 	if existingIndexes, err = m.getExistingIndexes(ctx); err != nil {
