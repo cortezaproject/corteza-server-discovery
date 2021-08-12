@@ -2,7 +2,6 @@ package options
 
 import (
 	"github.com/cortezaproject/corteza-server/pkg/options"
-	"github.com/davecgh/go-spew/spew"
 	"strings"
 )
 

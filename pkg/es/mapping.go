@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"go.uber.org/zap"
 	"net/http"
@@ -98,6 +99,8 @@ func (m *mapper) Mappings(ctx context.Context, indexPrefix string) (err error) {
 	if err = rsp.Body.Close(); err != nil {
 		return fmt.Errorf("failed to close mapping response body: %w", err)
 	}
+
+	spew.Dump(rspPayload.Response)
 
 	if existingIndexes, err = m.getExistingIndexes(ctx); err != nil {
 		return fmt.Errorf("failed to fetch existing indexes: %w", err)
