@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cortezaproject/corteza-discovery-indexer/pkg/options"
 	"net/http"
 	"net/url"
 	"strings"
@@ -34,9 +35,13 @@ type (
 	}
 )
 
-func Client(apiBaseUri, authBaseUri, key, secret string) (c *client, err error) {
-	c = &client{baseUri: apiBaseUri}
-	c.credentials = &credentials{authBaseUri: authBaseUri, key: key, secret: secret}
+func Client(opt options.IndexerOpt) (c *client, err error) {
+	c = &client{baseUri: opt.CortezaDiscoveryAPI}
+	c.credentials = &credentials{
+		authBaseUri: opt.CortezaAuth,
+		key:         opt.Schemas[0].ClientKey,
+		secret:      opt.Schemas[0].ClientSecret,
+	}
 	return c, err
 }
 

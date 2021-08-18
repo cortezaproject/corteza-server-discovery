@@ -18,11 +18,13 @@ type (
 	es struct {
 		log *zap.Logger
 		opt options.EsOpt
+		esc *elasticsearch.Client
+		esb esutil.BulkIndexer
 	}
 
 	esService interface {
-		EsClient() (*elasticsearch.Client, error)
-		EsBulk() (esutil.BulkIndexer, error)
+		EsClient() *elasticsearch.Client
+		EsBulk() esutil.BulkIndexer
 		Watch(ctx context.Context)
 	}
 
@@ -35,11 +37,25 @@ type (
 	}
 )
 
-func ES(log *zap.Logger, opt options.EsOpt) *es {
-	return &es{log, opt}
+func ES(log *zap.Logger, opt options.EsOpt) (out *es, err error) {
+	out = &es{log: log, opt: opt}
+
+	esc, err := out.newClient()
+	if err != nil {
+		return
+	}
+	out.esc = esc
+
+	esb, err := out.newBulkIndexer()
+	if err != nil {
+		return
+	}
+	out.esb = esb
+
+	return
 }
 
-func (es *es) EsClient() (*elasticsearch.Client, error) {
+func (es *es) newClient() (*elasticsearch.Client, error) {
 	return elasticsearch.NewClient(elasticsearch.Config{
 		Addresses:            es.opt.Addresses,
 		EnableRetryOnTimeout: es.opt.EnableRetryOnTimeout,
@@ -47,52 +63,74 @@ func (es *es) EsClient() (*elasticsearch.Client, error) {
 	})
 }
 
-func (es *es) EsBulk() (esutil.BulkIndexer, error) {
-	esc, err := es.EsClient()
-	if err != nil {
-		return nil, err
-	}
+func (es *es) newBulkIndexer() (esutil.BulkIndexer, error) {
 	return esutil.NewBulkIndexer(esutil.BulkIndexerConfig{
-		Client:     esc,
+		Client:     es.esc,
 		FlushBytes: 5e+5,
 	})
 }
 
+func (es *es) EsClient() *elasticsearch.Client {
+	return es.esc
+}
+
+func (es *es) EsBulk() esutil.BulkIndexer {
+	return es.esb
+}
+
+//func (es *es) Watch(ctx context.Context) {
+//	fmt.Println("ticker: ", es.opt.IndexInterval)
+//	//if es.opt.IndexInterval > 0 {
+//		ticker := time.NewTicker(time.Second * 1)
+//		go func() {
+//			defer ticker.Stop()
+//
+//			for {
+//				select {
+//				case <-ctx.Done():
+//					fmt.Println("Tickinggg overrrr ", time.Now())
+//
+//					return
+//				case <-ticker.C:
+//					fmt.Println("Tickinggg ", time.Now())
+//					err := DefaultMapper.Mappings(ctx, "private")
+//					if err != nil {
+//						es.log.Error("failed to mapping", zap.Error(err))
+//					}
+//
+//					err = DefaultReIndexer.ReindexAll(ctx, "private")
+//					if err != nil {
+//						es.log.Error("failed to reindex", zap.Error(err))
+//					}
+//
+//					esb, err := DefaultEs.EsBulk()
+//					if err != nil {
+//						es.log.Error("failed to start bulk indexer", zap.Error(err))
+//					}
+//
+//					if err := esb.Close(ctx); err != nil {
+//						es.log.Error("failed to close bulk indexer", zap.Error(err))
+//					}
+//				}
+//			}
+//		}()
+//
+//		es.log.Debug("watcher initialized")
+//	//}
+//}
+
 func (es *es) Watch(ctx context.Context) {
-	fmt.Println("ticker: ", es.opt.IndexInterval)
-	if es.opt.IndexInterval > 0 {
-		ticker := time.NewTicker(time.Second * time.Duration(es.opt.IndexInterval))
-		go func() {
-			defer ticker.Stop()
+	ticker := time.NewTicker(1 * time.Second * 5)
+	for _ = range ticker.C {
+		err := DefaultMapper.Mappings(ctx, "private")
+		if err != nil {
+			es.log.Error("failed to mapping", zap.Error(err))
+		}
 
-			for {
-				select {
-				case <-ctx.Done():
-					return
-				case <-ticker.C:
-					err := DefaultMapper.Mappings(ctx, "private")
-					if err != nil {
-						es.log.Error("failed to mapping", zap.Error(err))
-					}
-
-					err = DefaultReIndexer.ReindexAll(ctx, "private")
-					if err != nil {
-						es.log.Error("failed to reindex", zap.Error(err))
-					}
-
-					esb, err := DefaultEs.EsBulk()
-					if err != nil {
-						es.log.Error("failed to start bulk indexer", zap.Error(err))
-					}
-
-					if err := esb.Close(ctx); err != nil {
-						es.log.Error("failed to close bulk indexer", zap.Error(err))
-					}
-				}
-			}
-		}()
-
-		es.log.Debug("watcher initialized")
+		err = DefaultReIndexer.ReindexAll(ctx, "private")
+		if err != nil {
+			es.log.Error("failed to reindex", zap.Error(err))
+		}
 	}
 }
 

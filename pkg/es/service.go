@@ -2,7 +2,6 @@ package es
 
 import (
 	"context"
-	"fmt"
 	"github.com/cortezaproject/corteza-discovery-indexer/pkg/api"
 	"github.com/cortezaproject/corteza-discovery-indexer/pkg/options"
 	"go.uber.org/zap"
@@ -30,6 +29,7 @@ type (
 
 	mappingService interface {
 		Mappings(ctx context.Context, indexPrefix string) (err error)
+		ConfigurationMapping(ctx context.Context) (err error)
 	}
 
 	reIndexService interface {
@@ -45,24 +45,23 @@ var (
 )
 
 func Initialize(ctx context.Context, log *zap.Logger, c Config) (err error) {
-	DefaultEs = ES(log, c.ES)
+	DefaultEs, err = ES(log, c.ES)
 	if err != nil {
 		return
 	}
 
-	DefaultApiClient, err = api.Client(
-		c.Indexer.CortezaDiscoveryAPI,
-		c.Indexer.CortezaAuth,
-		c.Indexer.Schemas[0].ClientKey,
-		c.Indexer.Schemas[0].ClientSecret,
-	)
+	DefaultApiClient, err = api.Client(c.Indexer)
 	if err != nil {
 		return
 	}
 
 	DefaultMapper = Mapper(log, DefaultEs, DefaultApiClient)
 
-	// @todo: private/public indexing
+	err = DefaultMapper.ConfigurationMapping(ctx)
+	if err != nil {
+		return err
+	}
+	// @todo: 2.0 private/public/protected indexing
 	err = DefaultMapper.Mappings(ctx, "private")
 	if err != nil {
 		return err
@@ -72,15 +71,6 @@ func Initialize(ctx context.Context, log *zap.Logger, c Config) (err error) {
 	err = DefaultReIndexer.ReindexAll(ctx, "private")
 	if err != nil {
 		return err
-	}
-
-	esb, err := DefaultEs.EsBulk()
-	if err != nil {
-		return err
-	}
-
-	if err := esb.Close(ctx); err != nil {
-		return fmt.Errorf("failed to close bulk indexer: %w", err)
 	}
 
 	// Initiate watchers

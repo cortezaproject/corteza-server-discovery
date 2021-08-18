@@ -95,7 +95,7 @@ func (ri reIndexer) ReindexAll(ctx context.Context, indexPrefix string) error {
 		index:    "compose-namespaces",
 		callback: postProcNamespaces,
 	}
-	_ = fmt.Errorf("blockoing error")
+	_ = fmt.Errorf("blocking error")
 	return <-bErr
 }
 
@@ -153,10 +153,7 @@ func (ri reIndexer) reindexManager(ctx context.Context, indexPrefix string, srcQ
 
 				pQueueLen = len(srcQueue)
 
-				esb, err := ri.es.EsBulk()
-				if err != nil {
-					return
-				}
+				esb := ri.es.EsBulk()
 
 				s := esb.Stats()
 				ri.log.Debug("batch indexing stats",
@@ -242,11 +239,7 @@ func (ri reIndexer) reindex(ctx context.Context, indexPrefix string, ds *docsSou
 			return
 		}
 
-		esb, err := ri.es.EsBulk()
-		if err != nil {
-			return err
-		}
-
+		esb := ri.es.EsBulk()
 		for _, doc := range rspPayload.Response.Documents {
 			err = esb.Add(ctx, esutil.BulkIndexerItem{
 				Index:      fmt.Sprintf(indexTpl, indexPrefix, ds.index),
@@ -267,6 +260,10 @@ func (ri reIndexer) reindex(ctx context.Context, indexPrefix string, ds *docsSou
 			if ds.callback != nil {
 				go ds.callback(doc)
 			}
+		}
+
+		if err = esb.Close(ctx); err != nil {
+			return fmt.Errorf("failed to close bulk indexer: %w", err)
 		}
 
 		cursor = rspPayload.Response.Filter.NextPage

@@ -131,11 +131,7 @@ func (m *mapper) Mappings(ctx context.Context, indexPrefix string) (err error) {
 			continue
 		}
 
-		esc, _ := m.es.EsClient()
-		//if err != nil {
-		//	return
-		//}
-
+		esc := m.es.EsClient()
 		if esRsp, err = esc.Indices.Create(index, esc.Indices.Create.WithBody(buf)); esRsp.IsError() || err != nil {
 			if err != nil {
 				iLog.Error("index creation failed", zap.Error(err))
@@ -172,11 +168,7 @@ func (m *mapper) getExistingIndexes(ctx context.Context) (ii []*esIndex, err err
 
 	ii = make([]*esIndex, 100)
 
-	esc, err := m.es.EsClient()
-	if err != nil {
-		return
-	}
-
+	esc := m.es.EsClient()
 	esRsp, err = esc.Cat.Indices(
 		esc.Cat.Indices.WithContext(ctx),
 		esc.Cat.Indices.WithFormat("json"),
@@ -188,3 +180,61 @@ func (m *mapper) getExistingIndexes(ctx context.Context) (ii []*esIndex, err err
 
 	return ii, json.NewDecoder(esRsp.Body).Decode(&ii)
 }
+
+// ConfigurationMapping ...
+func (m *mapper) ConfigurationMapping(ctx context.Context) (err error) {
+	var (
+		buf = &bytes.Buffer{}
+
+		// @todo better naming and ref please parent structs
+		configMap = reqMapping{
+			Mappings: struct {
+				Properties map[string]*property `json:"properties,omitempty"`
+			}(struct{ Properties map[string]*property }{Properties: map[string]*property{
+				"incrementalIndex": {
+					//Type: "object",
+					Properties: map[string]*property{
+						"updatedAt": {Type: "date"},
+					},
+				},
+			}}),
+		}
+	)
+	const (
+		CortezaConfigurationIndex = "corteza-configuration-test"
+	)
+
+	index := fmt.Sprintf(CortezaConfigurationIndex)
+	esc := m.es.EsClient()
+	if err = json.NewEncoder(buf).Encode(configMap); err != nil {
+		return
+	}
+
+	// Check whether a particular configuration index exists
+	res, err := esc.Indices.Exists([]string{index}, esc.Indices.Exists.WithContext(ctx))
+	if res.IsError() || err != nil {
+		if err != nil {
+			m.log.Error("Configuration index exist check failed", zap.Error(err))
+		} else {
+			// Put mapping if exist otherwise create it
+			if res, err := esc.Indices.Create(index, esc.Indices.Create.WithBody(buf)); res.IsError() || err != nil {
+				if err != nil {
+					m.log.Error("Configuration index creation failed", zap.Error(err))
+				}
+				if len(res.String()) > 0 {
+					m.log.Error(fmt.Sprintf("Configuration index creation failed due to %s", res.String()))
+				}
+			}
+
+			m.log.Info("Configuration index created")
+			return
+		}
+	}
+
+	m.log.Info("Configuration index exist")
+
+	return
+}
+
+// @todo: maybe add const for all es mapping property type
+// @todo: add helper methods for all Indices & use it instead of esc.Indices.
