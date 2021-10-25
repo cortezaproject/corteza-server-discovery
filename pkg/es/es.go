@@ -120,7 +120,7 @@ func (es *es) EsBulk() esutil.BulkIndexer {
 //}
 
 func (es *es) Watch(ctx context.Context) {
-	ticker := time.NewTicker(1 * time.Second * 5)
+	ticker := time.NewTicker(1 * time.Second * 15)
 	for _ = range ticker.C {
 		err := DefaultMapper.Mappings(ctx, "private")
 		if err != nil {
