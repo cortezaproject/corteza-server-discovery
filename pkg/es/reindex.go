@@ -262,9 +262,9 @@ func (ri reIndexer) reindex(ctx context.Context, indexPrefix string, ds *docsSou
 			}
 		}
 
-		if err = esb.Close(ctx); err != nil {
-			return fmt.Errorf("failed to close bulk indexer: %w", err)
-		}
+		//if err = esb.Close(ctx); err != nil {
+		//	return fmt.Errorf("failed to close bulk indexer: %w", err)
+		//}
 
 		cursor = rspPayload.Response.Filter.NextPage
 		if rspPayload.Response.Filter.NextPage == "" {
