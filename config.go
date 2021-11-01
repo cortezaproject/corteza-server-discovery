@@ -14,9 +14,12 @@ type (
 		es       struct {
 			addresses []string
 		}
-		cortezaAuth         string
-		cortezaDiscoveryAPI string
-		schemas             []*schema
+		cortezaAuth          string
+		cortezaDiscoveryAPI  string
+		schemas              []*schema
+		EnableRetryOnTimeout bool `env:"ES_ENABLE_RETRY_ON_TIMEOUT"`
+		MaxRetries           int  `env:"ES_MAX_RETRIES"`
+		IndexInterval        int  `env:"INDEX_INTERVAL"`
 	}
 
 	schema struct {
@@ -47,6 +50,10 @@ func getConfig() (*config, error) {
 		if c.cortezaDiscoveryAPI == "" {
 			return fmt.Errorf("corteza Discovery API endpoint value empty, set it directly with CORTEZA_SERVER_AUTH or indirectly with CORTEZA_SERVER_API_DISCOVERY")
 		}
+
+		c.EnableRetryOnTimeout = options.EnvBool("ES_ENABLE_RETRY_ON_TIMEOUT", true)
+		c.MaxRetries = options.EnvInt("ES_MAX_RETRIES", 5)
+		c.IndexInterval = options.EnvInt("INDEX_INTERVAL", 10)
 
 		for _, ar := range []string{"public", "protected", "private"} {
 			var (

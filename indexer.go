@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 	"net"
 	"net/http"
+	"time"
 )
 
 var _ *spew.ConfigState = nil
@@ -41,6 +42,9 @@ func main() {
 		log.Error("failed to close bulk indexer", zap.Error(err))
 	}
 
+	// Initiate watcher
+	Watch(ctx, cfg.IndexInterval)
+
 	StartHttpServer(ctx, log, cfg.httpAddr, func() http.Handler {
 		router := chi.NewRouter()
 		router.Use(middleware.StripSlashes)
@@ -54,6 +58,46 @@ func main() {
 
 		return router
 	}())
+}
+
+func Watch(ctx context.Context, interval int) {
+	log := logger.MakeDebugLogger().WithOptions(zap.AddStacktrace(zap.PanicLevel))
+	cfg, err := getConfig()
+	cli.HandleError(err)
+
+	if interval > 0 {
+		ticker := time.NewTicker(time.Second * time.Duration(interval))
+		go func() {
+			defer ticker.Stop()
+
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-ticker.C:
+					api, err := indexer.ApiClient(cfg.cortezaDiscoveryAPI, cfg.cortezaAuth, cfg.schemas[0].clientKey, cfg.schemas[0].clientSecret)
+					cli.HandleError(err)
+
+					esc, err := indexer.EsClient(cfg.es.addresses)
+					cli.HandleError(err)
+
+					cli.HandleError(indexer.Mappings(ctx, log, esc, api, "private"))
+
+					esb, err := indexer.EsBulk(esc)
+					cli.HandleError(err)
+
+					_ = esb
+					cli.HandleError(indexer.ReindexAll(ctx, log, esb, api, "private"))
+
+					if err := esb.Close(ctx); err != nil {
+						log.Error("failed to close bulk indexer", zap.Error(err))
+					}
+				}
+			}
+		}()
+
+		log.Debug("watcher initialized")
+	}
 }
 
 func StartHttpServer(ctx context.Context, log *zap.Logger, addr string, h http.Handler) {
