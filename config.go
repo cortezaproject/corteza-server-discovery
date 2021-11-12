@@ -54,8 +54,8 @@ func getConfig() (*config, error) {
 				ucAr = strings.ToUpper(ar)
 				s    = &schema{indexPrefix: ar}
 
-				keyEnv = ucAr + "_INDEX_CLIENT_KEY"
-				secEnv = ucAr + "_INDEX_CLIENT_SECRET"
+				keyEnv = discoveryIndexer + ucAr + "_INDEX_CLIENT_KEY"
+				secEnv = discoveryIndexer + ucAr + "_INDEX_CLIENT_SECRET"
 			)
 
 			if s.clientKey, has = os.LookupEnv(keyEnv); !has {
