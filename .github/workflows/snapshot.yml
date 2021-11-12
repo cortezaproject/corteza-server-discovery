@@ -54,7 +54,6 @@ jobs:
           docker build --build-arg "BUILD_VERSION=${{ env.BUILD_VERSION_REF }}" \
                        --tag ghcr.io/cortezaproject/corteza-discovery-indexer:${{ env.BUILD_VERSION_SHA }} \
                        --tag ghcr.io/cortezaproject/corteza-discovery-indexer:${{ env.BUILD_VERSION_REF }} \
-                       --file Dockerfile.snapshot \
                        .
         if: ${{ !env.ACT }}
       - run: docker push ghcr.io/cortezaproject/corteza-discovery-indexer:${{ env.BUILD_VERSION_SHA }}
