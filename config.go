@@ -27,22 +27,23 @@ type (
 )
 
 const (
-	envKeyHttpAddr = "HTTP_ADDR"
+	discoveryIndexer = "DISCOVERY_INDEXER_"
+	envKeyHttpAddr   = discoveryIndexer + "HTTP_ADDR"
 )
 
 func getConfig() (*config, error) {
 	c := &config{}
 	return c, func() error {
-		baseUrl := options.EnvString("CORTEZA_SERVER_BASE_URL", "http://server:80")
+		baseUrl := options.EnvString(discoveryIndexer+"CORTEZA_SERVER_BASE_URL", "http://server:80")
 
 		c.httpAddr = options.EnvString(envKeyHttpAddr, "127.0.0.1:3201")
 
-		c.cortezaAuth = options.EnvString("CORTEZA_SERVER_AUTH", baseUrl+"/auth")
+		c.cortezaAuth = options.EnvString(discoveryIndexer+"CORTEZA_SERVER_AUTH", baseUrl+"/auth")
 		if c.cortezaAuth == "" {
 			return fmt.Errorf("corteza Auth endpoint value empty, set it directly with CORTEZA_SERVER_AUTH or indirectly with CORTEZA_SERVER_BASE_URL")
 		}
 
-		c.cortezaDiscoveryAPI = options.EnvString("CORTEZA_SERVER_API_DISCOVERY", baseUrl+"/api/discovery")
+		c.cortezaDiscoveryAPI = options.EnvString(discoveryIndexer+"CORTEZA_SERVER_API_DISCOVERY", baseUrl+"/api/discovery")
 		if c.cortezaDiscoveryAPI == "" {
 			return fmt.Errorf("corteza Discovery API endpoint value empty, set it directly with CORTEZA_SERVER_AUTH or indirectly with CORTEZA_SERVER_API_DISCOVERY")
 		}
@@ -74,7 +75,7 @@ func getConfig() (*config, error) {
 			return fmt.Errorf("set at least one client secret pair using <PREFIX>_INDEX_CLIENT_KEY and <PREFIX>_INDEX_CLIENT_SECRET where prefix is one of 'public', 'protected' or 'private'")
 		}
 
-		for _, a := range strings.Split(options.EnvString("ES_ADDRESS", "http://es:9200"), " ") {
+		for _, a := range strings.Split(options.EnvString(discoveryIndexer+"ES_ADDRESS", "http://es:9200"), " ") {
 			if a = strings.TrimSpace(a); a != "" {
 				c.es.addresses = append(c.es.addresses, a)
 			}
