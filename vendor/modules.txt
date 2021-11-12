@@ -1,5 +1,4 @@
 # github.com/SentimensRG/ctx v0.0.0-20180729130232-0bfd988c655d
-## explicit
 github.com/SentimensRG/ctx
 github.com/SentimensRG/ctx/sigctx
 # github.com/cortezaproject/corteza-server v0.0.0-20210415161117-8697ed1f07d9
@@ -20,11 +19,13 @@ github.com/elastic/go-elasticsearch/v7/estransport
 github.com/elastic/go-elasticsearch/v7/esutil
 github.com/elastic/go-elasticsearch/v7/internal/version
 # github.com/go-chi/chi v3.3.4+incompatible
+## explicit
 github.com/go-chi/chi
 github.com/go-chi/chi/middleware
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
 # github.com/joho/godotenv v1.3.0
+## explicit
 github.com/joho/godotenv
 github.com/joho/godotenv/autoload
 # github.com/spf13/cast v1.3.0
