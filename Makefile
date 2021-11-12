@@ -9,7 +9,7 @@ BUILD_ARCH            ?= $(shell go env GOARCH)
 BUILD_OS              ?= $(shell go env GOOS)
 BUILD_OS_is_windows    = $(filter windows,$(BUILD_OS))
 BUILD_DEST_DIR        ?= build
-BUILD_NAME             = $(BUILD_FLAVOUR)-discovery-indexer-$(BUILD_VERSION)-$(BUILD_OS)-$(BUILD_ARCH)
+BUILD_NAME             = $(BUILD_FLAVOUR)-server-$(BUILD_VERSION)-$(BUILD_OS)-$(BUILD_ARCH)
 BUILD_BIN_NAME         = $(BUILD_NAME)$(if $(BUILD_OS_is_windows),.exe,)
 
 RELEASE_BASEDIR        = $(BUILD_DEST_DIR)/pkg/$(BUILD_FLAVOUR)-server

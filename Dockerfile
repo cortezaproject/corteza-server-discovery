@@ -7,17 +7,17 @@ RUN apt-get -y update \
     curl \
  && rm -rf /var/lib/apt/lists/*
 
-ARG VERSION=2021.9.0
+ARG VERSION=2021.9.3-discovery
 ARG SERVER_VERSION=${VERSION}
 ARG CORTEZA_SERVER_PATH=https://releases.cortezaproject.org/files/corteza-discovery-indexer-${SERVER_VERSION}-linux-amd64.tar.gz
 RUN mkdir /tmp/server
-ADD $CORTEZA_SERVER_PATH /tmp/indexer
+ADD $CORTEZA_SERVER_PATH /tmp/server
 
 VOLUME /data
 
-RUN tar -zxvf "/tmp/indexer/$(basename $CORTEZA_SERVER_PATH)" -C / && \
-    rm -rf "/tmp/indexer" && \
-    mv /corteza-discovery-indexer /indexer
+RUN tar -zxvf "/tmp/server/$(basename $CORTEZA_SERVER_PATH)" -C / && \
+    rm -rf "/tmp/server" && \
+    mv /corteza-server /corteza
 
 WORKDIR /corteza
 
@@ -28,9 +28,10 @@ ENV STORAGE_PATH "/data"
 ENV HTTP_ADDR "0.0.0.0:80"
 ENV CORREDOR_ENABLED "false"
 ENV HTTP_WEBAPP_ENABLED "false"
-ENV PATH "/indexer/bin:${PATH}"
+ENV PATH "/corteza/bin:${PATH}"
 
 EXPOSE 80
 
-ENTRYPOINT ["./bin/corteza-discovery-indexer"]
+ENTRYPOINT ["./bin/corteza-server"]
 
+#CMD ["serve-api"]
