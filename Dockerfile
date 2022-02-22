@@ -7,9 +7,9 @@ RUN apt-get -y update \
     curl \
  && rm -rf /var/lib/apt/lists/*
 
-ARG VERSION=2021.9.3-discovery
+ARG VERSION=2022.3.1-discovery
 ARG SERVER_VERSION=${VERSION}
-ARG CORTEZA_SERVER_PATH=https://releases.cortezaproject.org/files/corteza-discovery-indexer-${SERVER_VERSION}-linux-amd64.tar.gz
+ARG CORTEZA_SERVER_PATH=https://releases.cortezaproject.org/files/corteza-server-discovery-${SERVER_VERSION}-linux-amd64.tar.gz
 RUN mkdir /tmp/server
 ADD $CORTEZA_SERVER_PATH /tmp/server
 

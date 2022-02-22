@@ -55,7 +55,7 @@ jobs:
                        --file Dockerfile.snapshot \
                        .
         if: ${{ !env.ACT }}
-      - run: docker push ghcr.io/cortezaproject/corteza-discovery-indexer:${{ env.BUILD_VERSION_SHA }}
+      - run: docker push ghcr.io/cortezaproject/corteza-server-discovery:${{ env.BUILD_VERSION_SHA }}
         if: ${{ !env.ACT }}
-      - run: docker push ghcr.io/cortezaproject/corteza-discovery-indexer:${{ env.BUILD_VERSION_REF }}
+      - run: docker push ghcr.io/cortezaproject/corteza-server-discovery:${{ env.BUILD_VERSION_REF }}
         if: ${{ !env.ACT }}

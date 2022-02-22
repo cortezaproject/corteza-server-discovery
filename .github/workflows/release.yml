@@ -85,9 +85,9 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - run: | 
+      - run: |
           docker build --build-arg "VERSION=${{ env.BUILD_VERSION }}" \
-                       -t cortezaproject/corteza-discovery-indexer:${{ env.BUILD_VERSION }} .
+                       -t cortezaproject/corteza-server-discovery:${{ env.BUILD_VERSION }} .
         if: ${{ !env.ACT }}
-      - run: docker push cortezaproject/corteza-discovery-indexer:${{ env.BUILD_VERSION }}
+      - run: docker push cortezaproject/corteza-server-discovery:${{ env.BUILD_VERSION }}
         if: ${{ !env.ACT }}

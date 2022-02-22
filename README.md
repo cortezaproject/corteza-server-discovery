@@ -1,7 +1,7 @@
 <h1 align="center">
   <img width="300px" src=".github/assets/corteza_logo.svg" />
   <br />
-  <p>Corteza Discovery Indexer</p>
+  <p>Corteza Server Discovery</p>
 
   <div align="center">
 
@@ -18,7 +18,7 @@
 
 <br />
 
-**Corteza discovery indexer** microservice for pulling indexable resources from Corteza's and pushing them into ElasticSearch. 
+**Corteza server discovery** is **back-end** of the Corteza Search facility, It enables people to easily search, aggregate, view, and analyze data.
 
 <br />
 
