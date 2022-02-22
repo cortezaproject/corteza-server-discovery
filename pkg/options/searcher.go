@@ -20,9 +20,9 @@ const (
 	discoverySearcher     = "DISCOVERY_SEARCHER_"
 	searcherEnvKeyEnabled = discoverySearcher + "ENABLED"
 	//searcherEnvKeyHttpAddr = discoverySearcher + "HTTP_ADDR"
-	envKeyJwtSecret    = discoverySearcher + "CORTEZA_SERVER_JWT_SECRET"
-	envKeyClientKey    = discoverySearcher + "CORTEZA_SERVER_CLIENT_KEY"
-	envKeyClientSecret = discoverySearcher + "CORTEZA_SERVER_CLIENT_SECRET"
+	envKeyJwtSecret    = discoverySearcher + "JWT_SECRET"
+	envKeyClientKey    = discoverySearcher + "CLIENT_KEY"
+	envKeyClientSecret = discoverySearcher + "CLIENT_SECRET"
 )
 
 func Searcher() (*SearcherOpt, error) {

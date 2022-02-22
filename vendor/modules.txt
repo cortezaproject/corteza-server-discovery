@@ -7,12 +7,14 @@
 github.com/SentimensRG/ctx
 github.com/SentimensRG/ctx/sigctx
 # github.com/aymerick/douceur v0.2.0
+## explicit
 github.com/aymerick/douceur/css
 github.com/aymerick/douceur/parser
 # github.com/cortezaproject/corteza-locale v0.0.0-20220126101537-7502490d290b
+## explicit; go 1.16
 github.com/cortezaproject/corteza-locale
 # github.com/cortezaproject/corteza-server v0.0.0-20220216123825-95065f8e731f
-## explicit
+## explicit; go 1.16
 github.com/cortezaproject/corteza-server/pkg/api
 github.com/cortezaproject/corteza-server/pkg/cli
 github.com/cortezaproject/corteza-server/pkg/errors
@@ -28,7 +30,7 @@ github.com/davecgh/go-spew/spew
 ## explicit
 github.com/dgrijalva/jwt-go
 # github.com/elastic/go-elasticsearch/v7 v7.12.0
-## explicit
+## explicit; go 1.11
 github.com/elastic/go-elasticsearch/v7
 github.com/elastic/go-elasticsearch/v7/esapi
 github.com/elastic/go-elasticsearch/v7/estransport
@@ -41,7 +43,7 @@ github.com/elastic/go-elasticsearch/v7/internal/version
 github.com/go-chi/chi
 github.com/go-chi/chi/middleware
 # github.com/go-chi/chi/v5 v5.0.7
-## explicit
+## explicit; go 1.14
 github.com/go-chi/chi/v5
 github.com/go-chi/chi/v5/middleware
 # github.com/go-chi/cors v1.0.0
@@ -51,20 +53,23 @@ github.com/go-chi/cors
 ## explicit
 github.com/go-chi/jwtauth
 # github.com/gorilla/css v1.0.0
+## explicit
 github.com/gorilla/css/scanner
 # github.com/inconshreveable/mousetrap v1.0.0
+## explicit
 github.com/inconshreveable/mousetrap
 # github.com/jmoiron/sqlx v1.2.0
 ## explicit
 github.com/jmoiron/sqlx/types
 # github.com/joho/godotenv v1.4.0
-## explicit
+## explicit; go 1.12
 github.com/joho/godotenv
 # github.com/microcosm-cc/bluemonday v1.0.16
+## explicit; go 1.16
 github.com/microcosm-cc/bluemonday
 github.com/microcosm-cc/bluemonday/css
 # github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e
-## explicit
+## explicit; go 1.12
 # github.com/prometheus/client_golang v0.9.3
 ## explicit
 # github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b
@@ -73,18 +78,21 @@ github.com/microcosm-cc/bluemonday/css
 ## explicit
 github.com/spf13/cast
 # github.com/spf13/cobra v0.0.3
+## explicit
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.3
+## explicit
 github.com/spf13/pflag
 # github.com/stretchr/testify v1.7.0
-## explicit
+## explicit; go 1.13
 # go.uber.org/atomic v1.7.0
-## explicit
+## explicit; go 1.13
 go.uber.org/atomic
 # go.uber.org/multierr v1.6.0
+## explicit; go 1.12
 go.uber.org/multierr
 # go.uber.org/zap v1.20.0
-## explicit
+## explicit; go 1.13
 go.uber.org/zap
 go.uber.org/zap/buffer
 go.uber.org/zap/internal/bufferpool
@@ -92,9 +100,11 @@ go.uber.org/zap/internal/color
 go.uber.org/zap/internal/exit
 go.uber.org/zap/zapcore
 # golang.org/x/net v0.0.0-20210614182718-04defd469f4e
+## explicit; go 1.17
 golang.org/x/net/html
 golang.org/x/net/html/atom
 # golang.org/x/text v0.3.7
+## explicit; go 1.17
 golang.org/x/text/internal/format
 golang.org/x/text/internal/language
 golang.org/x/text/internal/language/compact
@@ -102,6 +112,8 @@ golang.org/x/text/internal/tag
 golang.org/x/text/language
 golang.org/x/text/language/display
 # gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+## explicit
 gopkg.in/yaml.v3
 # moul.io/zapfilter v1.6.1
+## explicit; go 1.13
 moul.io/zapfilter

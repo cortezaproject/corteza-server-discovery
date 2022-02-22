@@ -175,32 +175,32 @@ func (h handlers) Search(w http.ResponseWriter, r *http.Request) {
 			aggregation.Aggregations.Namespace = nsAggregation.Aggregations.Namespace
 		}
 	} else {
-		//if results != nil && nsAggregation != nil {
-		//	nsMap := make(map[string]struct {
-		//		Key      string `json:"key"`
-		//		DocCount int    `json:"doc_count"`
-		//	})
-		//	for _, bucket := range results.Aggregations.Namespace.Buckets {
-		//		nsMap[bucket.Key] = bucket
-		//	}
-		//
-		//	var buckets []struct {
-		//		Key      string `json:"key"`
-		//		DocCount int    `json:"doc_count"`
-		//	}
-		//	for _, bucket := range nsAggregation.Aggregations.Namespace.Buckets {
-		//		val, ok := nsMap[bucket.Key]
-		//		if ok {
-		//			val.DocCount = nsMap[bucket.Key].DocCount
-		//		} else {
-		//			val.Key = bucket.Key
-		//			val.DocCount = 0
-		//		}
-		//		buckets = append(buckets, val)
-		//	}
-		//
-		//	results.Aggregations.Namespace.Buckets = buckets
-		//}
+		if results != nil && nsAggregation != nil {
+			nsMap := make(map[string]struct {
+				Key      string `json:"key"`
+				DocCount int    `json:"doc_count"`
+			})
+			for _, bucket := range results.Aggregations.Namespace.Buckets {
+				nsMap[bucket.Key] = bucket
+			}
+
+			var buckets []struct {
+				Key      string `json:"key"`
+				DocCount int    `json:"doc_count"`
+			}
+			for _, bucket := range nsAggregation.Aggregations.Namespace.Buckets {
+				val, ok := nsMap[bucket.Key]
+				if ok {
+					val.DocCount = nsMap[bucket.Key].DocCount
+				} else {
+					val.Key = bucket.Key
+					val.DocCount = 0
+				}
+				buckets = append(buckets, val)
+			}
+
+			results.Aggregations.Namespace.Buckets = buckets
+		}
 	}
 	// append namespace agg response which are not in es response
 	if results != nil && len(namespaceAggs) > 0 {
