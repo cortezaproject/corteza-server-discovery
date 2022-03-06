@@ -21,6 +21,7 @@ github.com/cortezaproject/corteza-server/pkg/errors
 github.com/cortezaproject/corteza-server/pkg/locale
 github.com/cortezaproject/corteza-server/pkg/logger
 github.com/cortezaproject/corteza-server/pkg/options
+github.com/cortezaproject/corteza-server/pkg/payload
 github.com/cortezaproject/corteza-server/pkg/rand
 github.com/cortezaproject/corteza-server/pkg/version
 # github.com/davecgh/go-spew v1.1.1
@@ -70,6 +71,9 @@ github.com/microcosm-cc/bluemonday
 github.com/microcosm-cc/bluemonday/css
 # github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e
 ## explicit; go 1.12
+# github.com/pmezard/go-difflib v1.0.0
+## explicit
+github.com/pmezard/go-difflib/difflib
 # github.com/prometheus/client_golang v0.9.3
 ## explicit
 # github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b
@@ -85,6 +89,7 @@ github.com/spf13/cobra
 github.com/spf13/pflag
 # github.com/stretchr/testify v1.7.0
 ## explicit; go 1.13
+github.com/stretchr/testify/assert
 # go.uber.org/atomic v1.7.0
 ## explicit; go 1.13
 go.uber.org/atomic

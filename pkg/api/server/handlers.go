@@ -2,9 +2,16 @@ package server
 
 import (
 	"fmt"
+	"github.com/cortezaproject/corteza-discovery-indexer/pkg/healthcheck"
 	"github.com/cortezaproject/corteza-discovery-indexer/pkg/options"
+	"github.com/cortezaproject/corteza-server/pkg/api"
+	"github.com/cortezaproject/corteza-server/pkg/version"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth"
 	"go.uber.org/zap"
+	"net/http"
+	"path"
 	"strings"
 )
 
@@ -12,6 +19,8 @@ import (
 func waitingRoutes(log *zap.Logger, httpOpt options.HttpServerOpt) (r chi.Router) {
 	r = chi.NewRouter()
 	r.Use(handleCORS)
+
+	mountServiceHandlers(r, log, httpOpt, waiting)
 
 	return
 }
@@ -28,23 +37,17 @@ func activeRoutes(log *zap.Logger, mountable []func(r chi.Router), envOpt option
 	r = chi.NewRouter()
 	r.Use(handleCORS)
 
-	fmt.Println(">>>>>>>>: ", "/"+strings.TrimPrefix(httpOpt.BaseUrl, "/"))
 	r.Route("/"+strings.TrimPrefix(httpOpt.BaseUrl, "/"), func(r chi.Router) {
-		//fmt.Println("httpOpt.BaseUrl: ", httpOpt.BaseUrl)
-		//r.Route(httpOpt.BaseUrl, func(r chi.Router) {
-		// Handle panic (sets 500 server error headers)
-		//r.Use(handlePanic)
-
 		// Base middleware, CORS, RealIP, RequestID, context-logger
 		r.Use(BaseMiddleware(envOpt.IsProduction(), log)...)
 
 		// Verifies JWT in headers, cookies, ... @todo
 		//r.Use(auth.HttpTokenVerifier)
-		//if len(searcherOpt.JwtSecret) == 0 {
-		//	log.Warn(fmt.Sprintf("JWT secret not set, access to private indexes disabled"))
-		//} else {
-		//	r.Use(jwtauth.Verifier(jwtauth.New(jwt.SigningMethodHS512.Alg(), searcherOpt.JwtSecret, nil)))
-		//}
+		if len(searcherOpt.JwtSecret) == 0 {
+			log.Warn(fmt.Sprintf("JWT secret not set, access to private indexes disabled"))
+		} else {
+			r.Use(jwtauth.Verifier(jwtauth.New(jwt.SigningMethodHS512.Alg(), searcherOpt.JwtSecret, nil)))
+		}
 
 		for _, mount := range mountable {
 			mount(r)
@@ -52,9 +55,59 @@ func activeRoutes(log *zap.Logger, mountable []func(r chi.Router), envOpt option
 
 	})
 
-	//if httpOpt.BaseUrl != "/" {
-	//	r.Handle("/", http.RedirectHandler(httpOpt.BaseUrl, http.StatusTemporaryRedirect))
-	//}
+	if httpOpt.BaseUrl != "/" {
+		r.Handle("/", http.RedirectHandler(httpOpt.BaseUrl, http.StatusTemporaryRedirect))
+	}
+
+	mountServiceHandlers(r, log, httpOpt, active)
 
 	return
+}
+
+func mountServiceHandlers(r chi.Router, log *zap.Logger, opt options.HttpServerOpt, state uint32) {
+	if opt.EnableVersionRoute {
+		mountVersionHandler(r, log, opt.BaseUrl)
+	}
+
+	if opt.EnableHealthcheckRoute {
+		mountHealthCheckHandler(r, log, opt.BaseUrl)
+	}
+}
+
+func mountVersionHandler(r chi.Router, log *zap.Logger, basePath string) {
+	var (
+		dPath   = "/version"
+		sPath   = path.Join(basePath, dPath)
+		handler = func(w http.ResponseWriter, r *http.Request) {
+			api.Send(w, r, struct {
+				BuildTime string `json:"buildTime"`
+				Version   string `json:"version"`
+			}{version.BuildTime, version.Version})
+		}
+	)
+
+	r.Get(dPath, handler)
+	log.Debug("version route enabled: " + dPath)
+
+	if dPath != sPath {
+		r.Get(sPath, handler)
+		log.Debug("version route enabled: " + sPath)
+	}
+
+}
+
+func mountHealthCheckHandler(r chi.Router, log *zap.Logger, basePath string) {
+	// default & sub path for health-check endpoint
+	var (
+		dPath = "/healthcheck"
+		sPath = path.Join(basePath, dPath)
+	)
+
+	r.Get(dPath, healthcheck.HttpHandler())
+	log.Debug("health check route enabled: " + sPath)
+
+	if dPath != sPath {
+		r.Get(sPath, healthcheck.HttpHandler())
+		log.Debug("health check route enabled: " + sPath)
+	}
 }

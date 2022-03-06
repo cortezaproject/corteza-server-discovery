@@ -1,4 +1,4 @@
-package searcher
+package rest
 
 import (
 	"encoding/json"

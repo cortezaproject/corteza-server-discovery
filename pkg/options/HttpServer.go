@@ -2,18 +2,22 @@ package options
 
 type (
 	HttpServerOpt struct {
-		Addr       string `env:"HTTP_ADDR"`
-		BaseUrl    string `env:"HTTP_BASE_URL"`
-		ApiBaseUrl string `env:"HTTP_API_BASE_URL"`
+		Addr                   string `env:"HTTP_ADDR"`
+		EnableHealthcheckRoute bool   `env:"HTTP_ENABLE_HEALTHCHECK_ROUTE"`
+		EnableVersionRoute     bool   `env:"HTTP_ENABLE_VERSION_ROUTE"`
+		BaseUrl                string `env:"HTTP_BASE_URL"`
+		ApiBaseUrl             string `env:"HTTP_API_BASE_URL"`
 	}
 )
 
-// HTTPServer initializes and returns a HTTPServerOpt with default values
+// HttpServer initializes and returns a HTTPServerOpt with default values
 func HttpServer() (o *HttpServerOpt) {
 	o = &HttpServerOpt{
-		Addr:       ":80",
-		BaseUrl:    "/",
-		ApiBaseUrl: "/",
+		Addr:                   ":80",
+		EnableHealthcheckRoute: true,
+		EnableVersionRoute:     true,
+		BaseUrl:                "/",
+		ApiBaseUrl:             "/",
 	}
 
 	fill(o)

@@ -24,6 +24,7 @@ func Corteza() (o *CortezaOpt, err error) {
 
 	return o, func() error {
 		baseUrl := options.EnvString(envKeyBaseUrl, "http://server:80")
+		o.BaseUrl = baseUrl
 
 		o.AuthUrl = options.EnvString(envKeyAuthUrl, baseUrl+"/auth")
 		if o.AuthUrl == "" {

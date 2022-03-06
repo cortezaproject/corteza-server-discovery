@@ -134,7 +134,7 @@ func (es *es) BulkIndexer() (esutil.BulkIndexer, error) {
 //	}
 //}
 
-func ValidElasticResponse(log *zap.Logger, res *esapi.Response, err error) error {
+func ValidElasticResponse(res *esapi.Response, err error) error {
 	if err != nil {
 		return fmt.Errorf("failed to get response from search backend: %w", err)
 	}

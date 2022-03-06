@@ -42,6 +42,7 @@ type (
 
 	reIndexService interface {
 		ReindexAll(ctx context.Context, indexPrefix string) error
+		Watch(ctx context.Context)
 	}
 )
 
@@ -92,7 +93,7 @@ func Initialize(ctx context.Context, log *zap.Logger, c Config) (err error) {
 func Watchers(ctx context.Context) {
 	// Initiate watcher for reindexing resource
 	//DefaultMapper.Watch(ctx)
-	//DefaultReIndexer.Watch(ctx)
+	DefaultReIndexer.Watch(ctx)
 
 	return
 }

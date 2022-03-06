@@ -8,9 +8,7 @@ import (
 func MountRoutes() func(r chi.Router) {
 	return func(r chi.Router) {
 		r.Group(func(r chi.Router) {
-			//r.Use(auth.AccessTokenCheck("discovery"))
-
-			handlers.NewSearch(Search())
+			handlers.NewSearch(Search()).MountRoutes(r)
 		})
 	}
 }

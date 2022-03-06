@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cortezaproject/corteza-discovery-indexer/pkg/es/reindex"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"github.com/elastic/go-elasticsearch/v7/esutil"
@@ -117,8 +116,6 @@ func (m *mapper) Mappings(ctx context.Context, indexPrefix string) (err error) {
 	if err = rsp.Body.Close(); err != nil {
 		return fmt.Errorf("failed to close mapping response body: %w", err)
 	}
-
-	spew.Dump(len(rspPayload.Response))
 
 	if existingIndexes, err = m.getExistingIndexes(ctx); err != nil {
 		return fmt.Errorf("failed to fetch existing indexes: %w", err)

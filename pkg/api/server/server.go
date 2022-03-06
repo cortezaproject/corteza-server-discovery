@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"net/http"
 
@@ -78,7 +77,6 @@ func (s server) Serve(ctx context.Context) {
 		zap.String("address", s.httpOpt.Addr),
 	)
 
-	fmt.Println("s.httpOpt.Addr: ", s.httpOpt.Addr)
 	listener, err := net.Listen("tcp", s.httpOpt.Addr)
 	if err != nil {
 		s.log.Error("cannot start server", zap.Error(err))
@@ -94,17 +92,16 @@ func (s server) Serve(ctx context.Context) {
 			// this enables us to send cancellation down to every request
 			BaseContext: func(listener net.Listener) context.Context { return ctx },
 		}
-		s.log.Info("http server started", zap.String("addr", s.httpOpt.Addr))
 		err = srv.Serve(listener)
 	}()
 	<-ctx.Done()
 
-	//if err == nil {
-	//	err = ctx.Err()
-	//	if err == context.Canceled {
-	//		err = nil
-	//	}
-	//}
+	if err == nil {
+		err = ctx.Err()
+		if err == context.Canceled {
+			err = nil
+		}
+	}
 
 	s.log.Info("HTTP server stopped", zap.Error(err))
 }

@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"github.com/cortezaproject/corteza-discovery-indexer/indexer"
+	"github.com/cortezaproject/corteza-discovery-indexer/pkg/healthcheck"
 	"github.com/cortezaproject/corteza-discovery-indexer/searcher"
 )
 
@@ -18,6 +19,12 @@ const (
 // Setup configures all required services
 func (app *CortezaDiscoveryApp) Setup() (err error) {
 	app.lvl = bootLevelSetup
+
+	hcd := healthcheck.Defaults()
+	if app.Opt.Searcher.Enabled {
+		hcd.Add(searcher.Healthcheck, "OpenSearch")
+	}
+
 	return nil
 }
 

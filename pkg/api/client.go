@@ -22,8 +22,9 @@ type (
 	}
 
 	client struct {
-		baseUri     string
-		credentials *credentials
+		baseUri          string
+		discoveryBaseUrl string
+		credentials      *credentials
 	}
 
 	ClientService interface {
@@ -38,7 +39,7 @@ type (
 )
 
 func Client(opt options.CortezaOpt, key, secret string) (c *client, err error) {
-	c = &client{baseUri: opt.DiscoveryUrl}
+	c = &client{baseUri: opt.BaseUrl, discoveryBaseUrl: opt.DiscoveryUrl}
 	c.credentials = &credentials{
 		authBaseUri: opt.AuthUrl,
 		key:         key,
@@ -52,11 +53,11 @@ func (*client) HttpClient() *http.Client {
 }
 
 func (c *client) Mappings() (*http.Request, error) {
-	return c.Request(c.baseUri + "/mappings/")
+	return c.Request(fmt.Sprintf("%s/mappings/", c.discoveryBaseUrl))
 }
 
 func (c *client) Resources(endpoint string, qs url.Values) (*http.Request, error) {
-	return c.Request(c.baseUri + "/resources/" + strings.TrimLeft(endpoint, "/") + "?" + qs.Encode())
+	return c.Request(fmt.Sprintf("%s/resources/%s?%s", c.discoveryBaseUrl, strings.TrimLeft(endpoint, "/"), qs.Encode()))
 }
 
 func (c *client) Namespaces() (*http.Request, error) {
@@ -110,7 +111,6 @@ func (c *client) authToken() (crd *credentials, err error) {
 	form.Set("grant_type", "client_credentials")
 	form.Set("scope", "profile api discovery")
 
-	fmt.Println("authBaseUri: ", authBaseUri)
 	req, err = http.NewRequest(http.MethodPost, authBaseUri+"/oauth2/token", strings.NewReader(form.Encode()))
 	if err != nil {
 		return

@@ -73,7 +73,7 @@ func ReIndexer(log *zap.Logger, esc esService, api apiClientService) *reIndexer 
 	}
 }
 
-func (ri reIndexer) ReindexAll(ctx context.Context, indexPrefix string) error {
+func (ri *reIndexer) ReindexAll(ctx context.Context, indexPrefix string) error {
 	var (
 		srcQueue = make(chan *docsSources, 100)
 		bErr     = ri.reindexManager(ctx, indexPrefix, srcQueue)
@@ -113,7 +113,7 @@ func (ri reIndexer) ReindexAll(ctx context.Context, indexPrefix string) error {
 	return <-bErr
 }
 
-func (ri reIndexer) reindexManager(ctx context.Context, indexPrefix string, srcQueue chan *docsSources) chan error {
+func (ri *reIndexer) reindexManager(ctx context.Context, indexPrefix string, srcQueue chan *docsSources) chan error {
 	var qErr = make(chan error)
 	const maxQueueLen = 3
 
@@ -189,7 +189,7 @@ func (ri reIndexer) reindexManager(ctx context.Context, indexPrefix string, srcQ
 	return qErr
 }
 
-func (ri reIndexer) reindex(ctx context.Context, indexPrefix string, ds *docsSources) (err error) {
+func (ri *reIndexer) reindex(ctx context.Context, indexPrefix string, ds *docsSources) (err error) {
 	var (
 		qs     = url.Values{"limit": []string{"500"}}
 		req    *http.Request
@@ -294,4 +294,11 @@ func (ri reIndexer) reindex(ctx context.Context, indexPrefix string, ds *docsSou
 	}
 
 	return nil
+}
+
+func (ri *reIndexer) Watch(ctx context.Context) {
+	//ticker := time.NewTicker(1 * time.Second * 15)
+	//for _ = range ticker.C {
+	//
+	//}
 }

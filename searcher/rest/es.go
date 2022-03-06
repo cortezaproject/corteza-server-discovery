@@ -1,4 +1,4 @@
-package searcher
+package rest
 
 import (
 	"bytes"
@@ -167,15 +167,7 @@ type (
 	}
 )
 
-func EsClient(aa []string) (*elasticsearch.Client, error) {
-	return elasticsearch.NewClient(elasticsearch.Config{
-		Addresses:            aa,
-		EnableRetryOnTimeout: true,
-		MaxRetries:           5,
-	})
-}
-
-func search(ctx context.Context, esc *elasticsearch.Client, log *zap.Logger, p searchParams) (*esSearchResponse, error) {
+func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p searchParams) (*esSearchResponse, error) {
 	var (
 		buf          bytes.Buffer
 		roles        []string
@@ -388,7 +380,7 @@ func search(ctx context.Context, esc *elasticsearch.Client, log *zap.Logger, p s
 		return nil, err
 	}
 
-	if err = validElasticResponse(log, res, err); err != nil {
+	if err = validElasticResponse(res, err); err != nil {
 		return nil, fmt.Errorf("invalid search response: %w", err)
 	}
 
@@ -415,12 +407,15 @@ func search(ctx context.Context, esc *elasticsearch.Client, log *zap.Logger, p s
 		zap.Bool("timedOut", sr.TimedOut),
 		zap.Int("hits", sr.Hits.Total.Value),
 		zap.String("hitsRelation", sr.Hits.Total.Relation),
+		zap.Int("namespaceAggs", len(sr.Aggregations.Namespace.Buckets)),
+		zap.Int("moduleAggs", len(sr.Aggregations.Module.Buckets)),
 	)
 
 	return sr, nil
 }
 
-func validElasticResponse(log *zap.Logger, res *esapi.Response, err error) error {
+// @fixme
+func validElasticResponse(res *esapi.Response, err error) error {
 	if err != nil {
 		return fmt.Errorf("failed to get response from search backend: %w", err)
 	}
