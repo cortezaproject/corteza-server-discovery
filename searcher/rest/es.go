@@ -281,7 +281,7 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 		query.Query.Bool.Filter = append(query.Query.Bool.Filter, nsf)
 	}
 
-	// Aggregations V1.0 Improved fixme
+	// Aggregations V1.0 Improved
 	//if len(p.aggregations) > 0 {
 	//	for _, a := range p.aggregations {
 	//		if len(a) > 0 {
@@ -347,7 +347,6 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 	if err := json.NewEncoder(&buf).Encode(query); err != nil {
 		return nil, fmt.Errorf("could not encode query: %q", err)
 	}
-	fmt.Println(">>> ", buf.String())
 
 	// Why set size to 999? default value for size is 10,
 	// so we needed to set value till we add (@todo) pagination to search result
@@ -414,7 +413,7 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 	return sr, nil
 }
 
-// @fixme
+// @todo move this to es service
 func validElasticResponse(res *esapi.Response, err error) error {
 	if err != nil {
 		return fmt.Errorf("failed to get response from search backend: %w", err)

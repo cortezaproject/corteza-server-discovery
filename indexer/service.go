@@ -36,12 +36,12 @@ type (
 	}
 
 	mappingService interface {
-		Mappings(ctx context.Context, indexPrefix string) (err error)
+		Mappings(ctx context.Context, esc *elasticsearch.Client, indexPrefix string) (err error)
 		ConfigurationMapping(ctx context.Context) (err error)
 	}
 
 	reIndexService interface {
-		ReindexAll(ctx context.Context, indexPrefix string) error
+		ReindexAll(ctx context.Context, esb esutil.BulkIndexer, indexPrefix string) error
 		Watch(ctx context.Context)
 	}
 )
@@ -68,6 +68,7 @@ func Initialize(ctx context.Context, log *zap.Logger, c Config) (err error) {
 		return
 	}
 
+	// Map indexing for resources
 	DefaultMapper = mapping.Mapper(log, DefaultEs, DefaultApiClient)
 
 	err = DefaultMapper.ConfigurationMapping(ctx)
@@ -75,16 +76,32 @@ func Initialize(ctx context.Context, log *zap.Logger, c Config) (err error) {
 		return err
 	}
 
+	esc, err := DefaultEs.Client()
+	if err != nil {
+		return fmt.Errorf("failed to prepare es client: %w", err)
+	}
+
 	// @todo: private/public/protected indexing
-	err = DefaultMapper.Mappings(ctx, "private")
+	err = DefaultMapper.Mappings(ctx, esc, "private")
 	if err != nil {
 		return err
 	}
 
+	// Reindexing existing mapping if needed
 	DefaultReIndexer = reindex.ReIndexer(log, DefaultEs, DefaultApiClient)
-	err = DefaultReIndexer.ReindexAll(ctx, "private")
+
+	esb, err := DefaultEs.BulkIndexer()
+	if err != nil {
+		return fmt.Errorf("failed to prepare bulk indexer: %w", err)
+	}
+
+	err = DefaultReIndexer.ReindexAll(ctx, esb, "private")
 	if err != nil {
 		return err
+	}
+
+	if err = esb.Close(ctx); err != nil {
+		return fmt.Errorf("failed to close bulk indexer: %w", err)
 	}
 
 	return

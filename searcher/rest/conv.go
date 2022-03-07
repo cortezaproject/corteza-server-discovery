@@ -219,7 +219,7 @@ func conv(sr *esSearchResponse, aggregation *esSearchResponse, noHits bool, modu
 			case "compose:record":
 				// @todo: Remove below line and find proper solution for searsia as value needs to be in json
 				ssVal := make(map[string]interface{})
-				// fixme refactor me in the morning please
+				// @todo refactor record related values
 				type (
 					created struct {
 						At *time.Time `json:"at,omitempty"`

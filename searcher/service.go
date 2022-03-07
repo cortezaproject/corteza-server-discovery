@@ -60,7 +60,7 @@ func Initialize(_ context.Context, log *zap.Logger, c Config) (err error) {
 	return
 }
 
-// @fixme
+// @todo move this to es service
 func validElasticResponse(res *esapi.Response, err error) error {
 	if err != nil {
 		return fmt.Errorf("failed to get response from search backend: %w", err)

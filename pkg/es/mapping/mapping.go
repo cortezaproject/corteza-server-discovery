@@ -81,7 +81,7 @@ func Mapper(log *zap.Logger, esc esService, api apiClientService) *mapper {
 }
 
 // Mappings fetches mappings from discovery server and update elastic search indexes
-func (m *mapper) Mappings(ctx context.Context, indexPrefix string) (err error) {
+func (m *mapper) Mappings(ctx context.Context, esc *elasticsearch.Client, indexPrefix string) (err error) {
 	var (
 		req             *http.Request
 		rsp             *http.Response
@@ -123,10 +123,10 @@ func (m *mapper) Mappings(ctx context.Context, indexPrefix string) (err error) {
 
 	indexMap := m.mapExistingIndexes(existingIndexes)
 
-	esc, err := m.es.Client()
-	if err != nil {
-		return fmt.Errorf("failed to prepare es client: %w", err)
-	}
+	//esc, err := m.es.Client()
+	//if err != nil {
+	//	return fmt.Errorf("failed to prepare es client: %w", err)
+	//}
 
 	for _, im := range rspPayload.Response {
 		buf.Reset()
@@ -166,7 +166,7 @@ func (m *mapper) Mappings(ctx context.Context, indexPrefix string) (err error) {
 			return
 		}
 
-		m.log.Info("index created")
+		iLog.Info("index created")
 	}
 
 	return
@@ -266,18 +266,3 @@ func (m *mapper) ConfigurationMapping(ctx context.Context) (err error) {
 
 // @todo: maybe add const for all es mapping property type
 // @todo: add helper methods for all Indices & use it instead of esc.Indices.
-
-//func (m *mapper) Watch(ctx context.Context) {
-//	ticker := time.NewTicker(1 * time.Second * 15)
-//	for _ = range ticker.C {
-//		err := DefaultMapper.Mappings(ctx, "private")
-//		if err != nil {
-//			.Error("failed to mapping", zap.Error(err))
-//		}
-//
-//		err = DefaultReIndexer.ReindexAll(ctx, "private")
-//		if err != nil {
-//			es.log.Error("failed to reindex", zap.Error(err))
-//		}
-//	}
-//}

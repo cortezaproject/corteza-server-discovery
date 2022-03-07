@@ -73,10 +73,10 @@ func ReIndexer(log *zap.Logger, esc esService, api apiClientService) *reIndexer 
 	}
 }
 
-func (ri *reIndexer) ReindexAll(ctx context.Context, indexPrefix string) error {
+func (ri *reIndexer) ReindexAll(ctx context.Context, esb esutil.BulkIndexer, indexPrefix string) error {
 	var (
 		srcQueue = make(chan *docsSources, 100)
-		bErr     = ri.reindexManager(ctx, indexPrefix, srcQueue)
+		bErr     = ri.reindexManager(ctx, esb, indexPrefix, srcQueue)
 	)
 
 	srcQueue <- &docsSources{
@@ -113,11 +113,11 @@ func (ri *reIndexer) ReindexAll(ctx context.Context, indexPrefix string) error {
 	return <-bErr
 }
 
-func (ri *reIndexer) reindexManager(ctx context.Context, indexPrefix string, srcQueue chan *docsSources) chan error {
+func (ri *reIndexer) reindexManager(ctx context.Context, esb esutil.BulkIndexer, indexPrefix string, srcQueue chan *docsSources) chan error {
 	var qErr = make(chan error)
 	const maxQueueLen = 3
 
-	go func() {
+	go func(esb esutil.BulkIndexer) {
 		var (
 			pQueueLen        = -1
 			pQueueStaleCount int
@@ -147,7 +147,7 @@ func (ri *reIndexer) reindexManager(ctx context.Context, indexPrefix string, src
 					return
 				}
 
-				err := ri.reindex(ctx, indexPrefix, ds)
+				err := ri.reindex(ctx, esb, indexPrefix, ds)
 				if err != nil {
 					ri.log.Error("failed to reindex", zap.Error(err), zap.String("endpoint", ds.endpoint))
 					return
@@ -167,10 +167,10 @@ func (ri *reIndexer) reindexManager(ctx context.Context, indexPrefix string, src
 
 				pQueueLen = len(srcQueue)
 
-				esb, err := ri.es.BulkIndexer()
-				if err != nil {
-					qErr <- err
-				}
+				//esb, err := ri.es.BulkIndexer()
+				//if err != nil {
+				//	qErr <- err
+				//}
 
 				s := esb.Stats()
 				ri.log.Debug("batch indexing stats",
@@ -183,13 +183,13 @@ func (ri *reIndexer) reindexManager(ctx context.Context, indexPrefix string, src
 				)
 			}
 		}
-	}()
+	}(esb)
 
 	println("returning")
 	return qErr
 }
 
-func (ri *reIndexer) reindex(ctx context.Context, indexPrefix string, ds *docsSources) (err error) {
+func (ri *reIndexer) reindex(ctx context.Context, esb esutil.BulkIndexer, indexPrefix string, ds *docsSources) (err error) {
 	var (
 		qs     = url.Values{"limit": []string{"500"}}
 		req    *http.Request
@@ -197,10 +197,10 @@ func (ri *reIndexer) reindex(ctx context.Context, indexPrefix string, ds *docsSo
 		cursor string
 	)
 
-	esb, err := ri.es.BulkIndexer()
-	if err != nil {
-		return fmt.Errorf("failed to prepare bulk indexer: %w", err)
-	}
+	//esb, err := ri.es.BulkIndexer()
+	//if err != nil {
+	//	return fmt.Errorf("failed to prepare bulk indexer: %w", err)
+	//}
 
 	for {
 		rspPayload := &rspDiscoveryDocuments{}
@@ -289,9 +289,9 @@ func (ri *reIndexer) reindex(ctx context.Context, indexPrefix string, ds *docsSo
 		}
 	}
 
-	if err = esb.Close(ctx); err != nil {
-		return fmt.Errorf("failed to close bulk indexer: %w", err)
-	}
+	//if err = esb.Close(ctx); err != nil {
+	//	return fmt.Errorf("failed to close bulk indexer: %w", err)
+	//}
 
 	return nil
 }

@@ -115,7 +115,7 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 		aggOnly: true,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("could not execute aggregation search: %w", err)
+		return nil, fmt.Errorf("could not execute namespace aggregation search: %w", err)
 	}
 
 	if len(searchString) == 0 {
@@ -199,7 +199,7 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 		mAggOnly:      true,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("could not execute aggregation search: %w", err)
+		return nil, fmt.Errorf("could not execute module aggregation search: %w", err)
 	}
 	if len(searchString) > 0 {
 		if results != nil && mAggregation != nil {
@@ -258,19 +258,13 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 		if nsRes, err = searcher.DefaultApiClient.HttpClient().Do(nsReq.WithContext(ctx)); err != nil {
 			return nil, fmt.Errorf("failed to send namespace request: %w", err)
 		}
-		//fmt.Println("err: : ", nsRes.Body)
 		if nsRes.StatusCode != http.StatusOK {
 			fmt.Println("err: ", err)
 			return nil, fmt.Errorf("request resulted in an unexpected status: %s: %w", err)
 		}
-		//spew.Dump("nsRes: ", nsRes)
-		fmt.Println(">>>>>>>>>>>1111111>>>>>>>> ")
-
 		if err = json.NewDecoder(nsRes.Body).Decode(&nsResponse); err != nil {
 			return nil, fmt.Errorf("failed to decode namespace response: %w", err)
 		}
-
-		fmt.Println(">>>>>>>>>>>2222222>>>>>>>> ")
 
 		if err = nsRes.Body.Close(); err != nil {
 			return nil, fmt.Errorf("failed to close namespace response body: %w", err)
@@ -313,12 +307,5 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 	}
 	//}
 
-	// @fixme
-	fmt.Println(">>>>>>>>>>>>>>>>>>> ", len(nsAggregation.Aggregations.Namespace.Buckets))
-	cc, err := conv(results, aggregation, noHits, moduleMap, nsHandleMap, mHandleMap)
-	fmt.Println("cc: ", len(cc.Hits))
-	return cc, err
+	return conv(results, aggregation, noHits, moduleMap, nsHandleMap, mHandleMap)
 }
-
-//return conv(results, aggregation, noHits, moduleMap, nsHandleMap, mHandleMap)
-//}
