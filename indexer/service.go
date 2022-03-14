@@ -30,6 +30,7 @@ type (
 	apiClientService interface {
 		HttpClient() *http.Client
 		Mappings() (*http.Request, error)
+		Feed(url.Values) (*http.Request, error)
 		Resources(string, url.Values) (*http.Request, error)
 		Request(string) (*http.Request, error)
 		Authenticate() error
@@ -88,7 +89,7 @@ func Initialize(ctx context.Context, log *zap.Logger, c Config) (err error) {
 	}
 
 	// Reindexing existing mapping if needed
-	DefaultReIndexer = reindex.ReIndexer(log, DefaultEs, DefaultApiClient)
+	DefaultReIndexer = reindex.ReIndexer(log, DefaultEs, DefaultApiClient, c.ES)
 
 	esb, err := DefaultEs.BulkIndexer()
 	if err != nil {
@@ -109,7 +110,6 @@ func Initialize(ctx context.Context, log *zap.Logger, c Config) (err error) {
 
 func Watchers(ctx context.Context) {
 	// Initiate watcher for reindexing resource
-	//DefaultMapper.Watch(ctx)
 	DefaultReIndexer.Watch(ctx)
 
 	return

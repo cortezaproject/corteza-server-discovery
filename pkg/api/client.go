@@ -30,6 +30,7 @@ type (
 	ClientService interface {
 		HttpClient() *http.Client
 		Mappings() (*http.Request, error)
+		Feed(url.Values) (*http.Request, error)
 		Resources(string, url.Values) (*http.Request, error)
 		Namespaces() (*http.Request, error)
 		Modules(uint64) (*http.Request, error)
@@ -54,6 +55,14 @@ func (*client) HttpClient() *http.Client {
 
 func (c *client) Mappings() (*http.Request, error) {
 	return c.Request(fmt.Sprintf("%s/mappings/", c.discoveryBaseUrl))
+}
+
+func (c *client) Feed(qs url.Values) (*http.Request, error) {
+	query := ""
+	if len(qs.Encode()) > 0 {
+		query = fmt.Sprintf("from=%s", qs.Get("from"))
+	}
+	return c.Request(fmt.Sprintf("%s/feed/?%s", c.discoveryBaseUrl, query))
 }
 
 func (c *client) Resources(endpoint string, qs url.Values) (*http.Request, error) {
