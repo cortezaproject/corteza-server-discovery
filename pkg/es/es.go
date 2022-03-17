@@ -36,26 +36,20 @@ type (
 
 func ES(log *zap.Logger, opt options.EsOpt) (out *es, err error) {
 	out = &es{log: log, opt: opt}
-
-	//out.esc, err = out.newClient()
-	//if err != nil {
-	//	return
-	//}
-
-	//out.esb, err = out.newBulkIndexer()
-	//if err != nil {
-	//	return
-	//}
-
 	return
 }
 
 func (es *es) Client() (*elasticsearch.Client, error) {
-	return elasticsearch.NewClient(elasticsearch.Config{
+	config := elasticsearch.Config{
 		Addresses:            es.opt.Addresses,
 		EnableRetryOnTimeout: es.opt.EnableRetryOnTimeout,
 		MaxRetries:           es.opt.MaxRetries,
-	})
+	}
+	if len(es.opt.Username) > 0 {
+		config.Username = es.opt.Username
+		config.Password = es.opt.Password
+	}
+	return elasticsearch.NewClient(config)
 }
 
 func (es *es) BulkIndexer() (esutil.BulkIndexer, error) {
@@ -69,70 +63,6 @@ func (es *es) BulkIndexer() (esutil.BulkIndexer, error) {
 		FlushBytes: 5e+5,
 	})
 }
-
-//func (es *es) EsClient() *elasticsearch.Client {
-//	return es.esc
-//}
-//
-//func (es *es) EsBulk() esutil.BulkIndexer {
-//	return es.esb
-//}
-
-//func (es *es) Watch(ctx context.Context) {
-//	fmt.Println("ticker: ", es.opt.IndexInterval)
-//	//if es.opt.IndexInterval > 0 {
-//		ticker := time.NewTicker(time.Second * 1)
-//		go func() {
-//			defer ticker.Stop()
-//
-//			for {
-//				select {
-//				case <-ctx.Done():
-//					fmt.Println("Tickinggg overrrr ", time.Now())
-//
-//					return
-//				case <-ticker.C:
-//					fmt.Println("Tickinggg ", time.Now())
-//					err := DefaultMapper.Mappings(ctx, "private")
-//					if err != nil {
-//						es.log.Error("failed to mapping", zap.Error(err))
-//					}
-//
-//					err = DefaultReIndexer.ReindexAll(ctx, "private")
-//					if err != nil {
-//						es.log.Error("failed to reindex", zap.Error(err))
-//					}
-//
-//					esb, err := DefaultEs.EsBulk()
-//					if err != nil {
-//						es.log.Error("failed to start bulk indexer", zap.Error(err))
-//					}
-//
-//					if err := esb.Close(ctx); err != nil {
-//						es.log.Error("failed to close bulk indexer", zap.Error(err))
-//					}
-//				}
-//			}
-//		}()
-//
-//		es.log.Debug("watcher initialized")
-//	//}
-//}
-
-//func (es *es) Watch(ctx context.Context) {
-//	ticker := time.NewTicker(1 * time.Second * 15)
-//	for _ = range ticker.C {
-//		err := indexer.DefaultMapper.Mappings(ctx, "private")
-//		if err != nil {
-//			es.log.Error("failed to mapping", zap.Error(err))
-//		}
-//
-//		err = indexer.DefaultReIndexer.ReindexAll(ctx, "private")
-//		if err != nil {
-//			es.log.Error("failed to reindex", zap.Error(err))
-//		}
-//	}
-//}
 
 func ValidElasticResponse(res *esapi.Response, err error) error {
 	if err != nil {
