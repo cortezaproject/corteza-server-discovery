@@ -3,7 +3,9 @@ package rest
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/spf13/cast"
+	"html"
 	"sort"
 	"time"
 )
@@ -269,28 +271,29 @@ func conv(sr *esSearchResponse, aggregation *esSearchResponse, noHits bool, modu
 						slice = append(slice, valueJson{
 							Name:  f,
 							Label: r.ValueLabels[f],
-							Value: r.Values[f],
+							Value: sanitize(r.Values[f]),
 						})
 
 						if vv, ok := r.Values[f].([]interface{}); ok {
 							if len(vv) > 0 {
-								ssVal[f] = vv[0]
+								ssVal[f] = sanitize(vv[0])
 							}
 						}
 					}
 				} else {
 					for k, v := range r.Values {
 						// @todo hardcoded value
-						if len(slice) < 5 {
+						sanitizedVal := sanitize(v)
+						if len(slice) < 5 && sanitizedVal != nil {
 							slice = append(slice, valueJson{
 								Name:  k,
 								Label: r.ValueLabels[k],
-								Value: v,
+								Value: sanitizedVal,
 							})
 
 							if vv, ok := v.([]interface{}); ok {
 								if len(vv) > 0 {
-									ssVal[k] = vv[0]
+									ssVal[k] = sanitize(vv[0])
 								}
 							}
 						}
@@ -359,4 +362,36 @@ func getCreatedBy(user *createdBy) string {
 		return fmt.Sprintf("%d", user.UserID)
 	}
 	return ""
+}
+
+func sanitize(v interface{}) interface{} {
+	if v == nil {
+		return v
+	}
+
+	switch v.(type) {
+	case string:
+		v = richText(v.(string))
+	case []interface{}:
+		for _, val := range v.([]interface{}) {
+			val = sanitize(val)
+		}
+	default:
+		return v
+	}
+
+	return v
+}
+
+// RichText assures safe HTML content
+func richText(in string) string {
+	// use standard html escaping policy
+	p := bluemonday.UGCPolicy()
+
+	sanitized := p.Sanitize(in)
+
+	// handle escaped strings and unescape them
+	// all the dangerous chars should have been stripped
+	// by now
+	return html.UnescapeString(sanitized)
 }
