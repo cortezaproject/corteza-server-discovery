@@ -6,6 +6,7 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/spf13/cast"
 	"html"
+	"reflect"
 	"sort"
 	"time"
 )
@@ -373,8 +374,9 @@ func sanitize(v interface{}) interface{} {
 	case string:
 		v = richText(v.(string))
 	case []interface{}:
-		for _, val := range v.([]interface{}) {
-			val = sanitize(val)
+		vv := reflect.ValueOf(v)
+		for i, val := range v.([]interface{}) {
+			vv.Index(i).Set(reflect.ValueOf(sanitize(val)))
 		}
 	default:
 		return v
@@ -386,7 +388,7 @@ func sanitize(v interface{}) interface{} {
 // RichText assures safe HTML content
 func richText(in string) string {
 	// use standard html escaping policy
-	p := bluemonday.UGCPolicy()
+	p := bluemonday.StrictPolicy()
 
 	sanitized := p.Sanitize(in)
 
