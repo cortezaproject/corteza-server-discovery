@@ -1,8 +1,37 @@
 version: '3.0'
 
 services:
-  elk:
-    profiles: [ "dev" ]
-    image: sebp/elk:latest
+  opensearch:
+    image: opensearchproject/opensearch:1.3.0
+#    container_name: es
     restart: on-failure
-    ports: [ "5601:5601", "9200:9200", "5044:5044" ]
+#    networks: [ internal ]
+    environment:
+      - cluster.name=es-docker-cluster
+      - node.name=es
+      - cluster.initial_master_nodes=es
+      - bootstrap.memory_lock=true # along with the memlock settings below, disables swapping
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
+      - "DISABLE_INSTALL_DEMO_CONFIG=true" # disables execution of install_demo_configuration.sh bundled with security plugin, which installs demo certificates and security configurations to OpenSearch
+      - "DISABLE_SECURITY_PLUGIN=true" # disables security plugin entirely in OpenSearch by setting plugins.security.disabled: true in opensearch.yml
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./data/es:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+
+  es-dashboards:
+    image: opensearchproject/opensearch-dashboards:1.2.0
+    container_name: opensearch-dashboards
+    ports:
+      - "5601:5601"
+    expose:
+      - "5601"
+    environment:
+      - 'OPENSEARCH_HOSTS=["http://opensearch:9200"]'
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true" # disables security dashboards plugin in OpenSearch Dashboards
+
+
