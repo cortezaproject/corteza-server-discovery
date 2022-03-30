@@ -388,6 +388,10 @@ func (ri *reIndexer) feedReindex(ctx context.Context, esb esutil.BulkIndexer, in
 				qs.Set("recordID", val)
 			}
 
+			val, ok = ds.params["deleted"]
+			if ok {
+				qs.Set("deleted", val)
+			}
 		}
 
 		if req, err = ri.api.Resources(ds.endpoint, qs); err != nil {
@@ -450,18 +454,22 @@ func (ri *reIndexer) feedReindex(ctx context.Context, esb esutil.BulkIndexer, in
 		}
 
 		for _, doc := range rspPayload.Response.Documents {
-			err = esb.Add(ctx, esutil.BulkIndexerItem{
+			esbItem := esutil.BulkIndexerItem{
 				Index:      docIndex,
 				Action:     action,
 				DocumentID: doc.ID,
-				Body:       bytes.NewBuffer(doc.Source),
 				OnFailure: func(ctx context.Context, req esutil.BulkIndexerItem, rsp esutil.BulkIndexerResponseItem, err error) {
 					spew.Dump(req)
 					spew.Dump(rsp)
 					spew.Dump(err)
 				},
-			})
+			}
+			if action != "delete" {
+				esbItem.Action = "index"
+				esbItem.Body = bytes.NewBuffer(doc.Source)
+			}
 
+			err = esb.Add(ctx, esbItem)
 			if err != nil {
 				return err
 			}
@@ -578,7 +586,8 @@ func (ri *reIndexer) feedReindexChanges(ctx context.Context, esb esutil.BulkInde
 				index:    "system-users",
 				action:   action,
 				params: map[string]string{
-					"userID": fmt.Sprintf("%d", al.ResourceID),
+					"userID":  fmt.Sprintf("%d", al.ResourceID),
+					"deleted": "1",
 				},
 			}
 			break
@@ -590,6 +599,7 @@ func (ri *reIndexer) feedReindexChanges(ctx context.Context, esb esutil.BulkInde
 				action:   action,
 				params: map[string]string{
 					"namespaceID": fmt.Sprintf("%d", al.ResourceID),
+					"deleted":     "1",
 				},
 			}
 			break
@@ -607,6 +617,7 @@ func (ri *reIndexer) feedReindexChanges(ctx context.Context, esb esutil.BulkInde
 				action:   action,
 				params: map[string]string{
 					"moduleID": fmt.Sprintf("%d", al.ResourceID),
+					"deleted":  "1",
 				},
 			}
 			break
@@ -624,6 +635,7 @@ func (ri *reIndexer) feedReindexChanges(ctx context.Context, esb esutil.BulkInde
 				action:   action,
 				params: map[string]string{
 					"recordID": fmt.Sprintf("%d", al.ResourceID),
+					"deleted":  "1",
 				},
 			}
 			break
