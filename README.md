@@ -53,15 +53,15 @@ Additionally, we've provided some [video instructions](https://forum.cortezaproj
 Quick references:
 
 * [data backup and restore](https://docs.cortezaproject.org/corteza-docs/2022.3/devops-guide/maintenance/backups.html)
-* [troubleshooting](https://docs.cortezaproject.org/corteza-docs/2022.3/devops-guide/maintenance/troubleshooting.html)
-* [setting up an email relay](https://docs.cortezaproject.org/corteza-docs/2022.3/devops-guide/extension-requirements/email-relay.html)
-* [setting up sink routes](https://docs.cortezaproject.org/corteza-docs/2022.3/devops-guide/extension-requirements/sink-route.html)
+* [troubleshooting](https://docs.cortezaproject.org/corteza-docs/2022.3/devops-guide/troubleshooting/index.html)
+* [setting up an email relay](https://docs.cortezaproject.org/corteza-docs/2022.3/devops-guide/email-relay.html)
+* [setting up sink routes](https://docs.cortezaproject.org/corteza-docs/2022.3/devops-guide/sink-route.html)
 
 ## Upgrading Corteza
 
 [![Latest Version Card](https://img.shields.io/github/v/tag/cortezaproject/corteza-discovery-indexer?label=latest%20stable%20version)](https://img.shields.io/github/v/tag/cortezaproject/corteza-discovery-indexer?label=latest%20stable%20version)
 
-Refer to the [changelog](https://docs.cortezaproject.org/corteza-docs/2022.3/changelog/index.html) and the [upgrade guide](https://docs.cortezaproject.org/corteza-docs/2022.3/upgrade-guide/index.html) to upgrade your Corteza instance.
+Refer to the [changelog](https://docs.cortezaproject.org/corteza-docs/2022.3/changelog/index.html) and the [upgrade guide](https://docs.cortezaproject.org/corteza-docs/2022.3/devops-guide/upgrade/index.html) to upgrade your Corteza instance.
 
 ## Using Corteza
 
@@ -82,7 +82,8 @@ Quick references:
 * automation using [workflows](https://docs.cortezaproject.org/corteza-docs/2022.3/integrator-guide/automation/workflows/index.html) and [automation scripts](https://docs.cortezaproject.org/corteza-docs/2022.3/integrator-guide/automation/automation-scripts/index.html)
 * [using the REST API](https://docs.cortezaproject.org/corteza-docs/2022.3/integrator-guide/accessing-corteza/index.html),
 
-## Contributing
+<!-- @todo... -->
+<!-- ## Contributing
 
 Refer to the [Developer Guide/Corteza Server](https://docs.cortezaproject.org/corteza-docs/2022.3/developer-guide/corteza-js/index.html) document for details regarding the [development setup](https://docs.cortezaproject.org/corteza-docs/2022.3/developer-guide/corteza-js/index.html#_development_setup), the [project structure](https://docs.cortezaproject.org/corteza-docs/2022.3/developer-guide/corteza-js/structure.html), and the feature insight documents.
 
@@ -90,8 +91,7 @@ Refer to the [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and 
 
 Quick command reference:
 
-<!-- @todo... -->
-<!-- * run server: `make watch` or `make realize`
+* run server: `make watch` or `make realize`
 * run unit tests: `make test.unit`
 * run integration tests: `make test.integration`
 * run all tests `make test.all`
