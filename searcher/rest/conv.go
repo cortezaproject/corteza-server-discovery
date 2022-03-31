@@ -17,13 +17,21 @@ type (
 		Total struct {
 			Value   int    `json:"value"`
 			TotalOp string `json:"op"`
-		} `json:"total"`
+		} `json:"-"`
 
 		Hits         []cdHit         `json:"hits"`
 		TotalHits    int             `json:"total_hits"`
 		Aggregations []cdAggregation `json:"aggregations"`
 
+		pagination
+
 		// Context ldCtx `json:"@context"`
+	}
+
+	pagination struct {
+		Size         int `json:"size"`
+		From         int `json:"from"`
+		TotalResults int `json:"total_results"`
 	}
 
 	cdHit struct {
@@ -55,7 +63,7 @@ type (
 )
 
 // conv converts results from the backend into corteza-discovery (jsonld-ish) format
-func conv(sr *esSearchResponse, aggregation *esSearchResponse, noHits bool, moduleMeta map[string][]string, nsHandleMap map[string]string, mHandleMap map[string]string) (out *cdResults, err error) {
+func conv(sr *esSearchResponse, aggregation *esSearchResponse, noHits bool, moduleMeta map[string][]string, nsHandleMap map[string]string, mHandleMap map[string]string, page pagination) (out *cdResults, err error) {
 	if sr == nil {
 		return
 	}
@@ -63,6 +71,13 @@ func conv(sr *esSearchResponse, aggregation *esSearchResponse, noHits bool, modu
 	out = &cdResults{}
 	out.Total.Value = sr.Hits.Total.Value
 	out.Total.TotalOp = sr.Hits.Total.Relation
+
+	// Pagination
+	out.TotalResults = sr.Hits.Total.Value
+	out.From = page.From
+	out.Size = page.Size
+
+	// Aggregation
 	out.Aggregations = []cdAggregation{}
 
 	nsTotalHits := make(map[string]cdAggregationHits)

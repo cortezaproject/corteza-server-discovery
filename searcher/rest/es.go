@@ -160,6 +160,7 @@ type (
 		moduleAggs    []string
 		namespaceAggs []string
 		dumpRaw       bool
+		from          int
 		size          int
 
 		aggOnly  bool
@@ -167,7 +168,7 @@ type (
 	}
 )
 
-func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p searchParams) (*esSearchResponse, error) {
+func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p searchParams) (sr *esSearchResponse, page pagination, err error) {
 	var (
 		buf          bytes.Buffer
 		roles        []string
@@ -344,15 +345,21 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 	//	query.Aggregations = (Aggregations{}).encodeTerms(p.aggregations)
 	//}
 
-	if err := json.NewEncoder(&buf).Encode(query); err != nil {
-		return nil, fmt.Errorf("could not encode query: %q", err)
+	if err = json.NewEncoder(&buf).Encode(query); err != nil {
+		err = fmt.Errorf("could not encode query: %q", err)
+		return
 	}
 
 	// Why set size to 999? default value for size is 10,
 	// so we needed to set value till we add (@todo) pagination to search result
+	if p.from > 0 && p.from >= p.size {
+		p.size = p.from + 100
+	}
 	if p.size == 0 {
 		p.size = 999
 	}
+	page.From = p.from
+	page.Size = p.size
 
 	sReqArgs := []func(*esapi.SearchRequest){
 		esc.Search.WithContext(ctx),
@@ -360,7 +367,7 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 		esc.Search.WithTrackTotalHits(true),
 		//esc.Search.WithScroll(),
 		esc.Search.WithSize(p.size),
-		//esc.Search.WithFrom(0), // paging (offset)
+		esc.Search.WithFrom(p.from),
 		//esc.Search.WithExplain(true), // debug
 	}
 
@@ -376,11 +383,12 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 	res, err := esc.Search(sReqArgs...)
 
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	if err = validElasticResponse(res, err); err != nil {
-		return nil, fmt.Errorf("invalid search response: %w", err)
+		err = fmt.Errorf("invalid search response: %w", err)
+		return
 	}
 
 	defer res.Body.Close()
@@ -392,9 +400,9 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 		os.Stdout.Write(bodyBytes)
 	}
 
-	var sr = &esSearchResponse{}
+	sr = &esSearchResponse{}
 	if err = json.NewDecoder(res.Body).Decode(sr); err != nil {
-		return nil, err
+		return
 	}
 
 	// Print the response status, number of results, and request duration.
@@ -410,7 +418,7 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 		zap.Int("moduleAggs", len(sr.Aggregations.Module.Buckets)),
 	)
 
-	return sr, nil
+	return
 }
 
 // @todo move this to es service

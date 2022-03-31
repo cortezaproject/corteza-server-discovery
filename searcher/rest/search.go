@@ -59,10 +59,12 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 		log           = searcher.DefaultLogger
 		searchString  = r.GetQuery()
 		size          = r.GetSize()
+		from          = r.GetFrom()
 		namespaceAggs = r.GetNamespaceAggs()
 		moduleAggs    = r.GetModuleAggs()
 		validDumpRaw  = r.GetDumpRaw() != ""
 
+		page          pagination
 		results       *esSearchResponse
 		aggregation   *esSearchResponse
 		nsAggregation *esSearchResponse
@@ -85,8 +87,9 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 		return nil, err
 	}
 
-	results, err = esSearch(ctx, log, esc, searchParams{
+	results, page, err = esSearch(ctx, log, esc, searchParams{
 		query:         searchString,
+		from:          from,
 		size:          size,
 		moduleAggs:    moduleAggs,
 		namespaceAggs: namespaceAggs,
@@ -97,8 +100,8 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 	}
 
 	if len(searchString) == 0 {
-		aggregation, err = esSearch(ctx, log, esc, searchParams{
-			size:          size,
+		aggregation, _, err = esSearch(ctx, log, esc, searchParams{
+			//size:          size,
 			dumpRaw:       validDumpRaw,
 			namespaceAggs: namespaceAggs,
 			aggOnly:       true,
@@ -109,8 +112,8 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 	}
 
 	// append all namespace agg with counts no matter what
-	nsAggregation, err = esSearch(ctx, log, esc, searchParams{
-		size:    size,
+	nsAggregation, _, err = esSearch(ctx, log, esc, searchParams{
+		//size:    size,
 		dumpRaw: validDumpRaw,
 		aggOnly: true,
 	})
@@ -190,8 +193,8 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 		}
 	}
 
-	mAggregation, err = esSearch(ctx, log, esc, searchParams{
-		size:          size,
+	mAggregation, _, err = esSearch(ctx, log, esc, searchParams{
+		//size:          size,
 		dumpRaw:       validDumpRaw,
 		query:         searchString,
 		namespaceAggs: namespaceAggs,
@@ -307,5 +310,5 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 	}
 	//}
 
-	return conv(results, aggregation, noHits, moduleMap, nsHandleMap, mHandleMap)
+	return conv(results, aggregation, noHits, moduleMap, nsHandleMap, mHandleMap, page)
 }

@@ -8,6 +8,7 @@ import (
 type (
 	SearchResources struct {
 		Q             string
+		From          int
 		Size          int
 		NamespaceAggs []string
 		ModuleAggs    []string
@@ -24,6 +25,7 @@ func NewSearchListResources() *SearchResources {
 func (r SearchResources) Auditable() map[string]interface{} {
 	return map[string]interface{}{
 		"q":             r.Q,
+		"from":          r.From,
 		"size":          r.Size,
 		"namespaceAggs": r.NamespaceAggs,
 		"moduleAggs":    r.ModuleAggs,
@@ -37,6 +39,10 @@ func (r SearchResources) GetQuery() string {
 
 func (r SearchResources) GetSize() int {
 	return r.Size
+}
+
+func (r SearchResources) GetFrom() int {
+	return r.From
 }
 
 func (r SearchResources) GetNamespaceAggs() []string {
@@ -66,6 +72,13 @@ func (r *SearchResources) Fill(req *http.Request) (err error) {
 
 		if val, ok := tmp["size"]; ok && len(val) > 0 {
 			r.Size, err = payload.ParseInt(val[0]), nil
+			if err != nil {
+				return err
+			}
+		}
+
+		if val, ok := tmp["from"]; ok && len(val) > 0 {
+			r.From, err = payload.ParseInt(val[0]), nil
 			if err != nil {
 				return err
 			}
