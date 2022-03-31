@@ -2,8 +2,8 @@ package server
 
 import (
 	"fmt"
-	"github.com/cortezaproject/corteza-discovery-indexer/pkg/healthcheck"
-	"github.com/cortezaproject/corteza-discovery-indexer/pkg/options"
+	"github.com/cortezaproject/corteza-server-discovery/pkg/healthcheck"
+	"github.com/cortezaproject/corteza-server-discovery/pkg/options"
 	"github.com/cortezaproject/corteza-server/pkg/api"
 	"github.com/cortezaproject/corteza-server/pkg/version"
 	"github.com/dgrijalva/jwt-go"

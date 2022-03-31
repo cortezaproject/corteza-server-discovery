@@ -177,13 +177,15 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 	)
 
 	if _, has := claims["roles"]; has {
-		if rolesStr, is := claims["roles"].(string); is {
-			roles = strings.Split(rolesStr, " ")
+		if rr, is := claims["roles"].([]interface{}); is {
+			for _, role := range rr {
+				roles = append(roles, fmt.Sprintf("%s", role))
+			}
 		}
 	}
 	if _, has := claims["sub"]; has {
 		if sub, is := claims["sub"].(string); is {
-			userID, _ = strconv.ParseUint(sub, 10, 64)
+			userID, _ = extractFromSubClaim(sub)
 		}
 	}
 
@@ -199,29 +201,20 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 	// Decide what indexes we can use
 	if userID == 0 {
 		// Missing, invalid, expired access token (JWT)
-		//index.Prefix.Index.Value = "corteza-public-"
-		// fixme revert this, temp fix for searching
-		index.Prefix.Index.Value = "corteza-private-"
+		index.Prefix.Index.Value = "corteza-public-"
 	} else {
 		// Authenticated user
 		index.Prefix.Index.Value = "corteza-private-"
 
-		//query.Query.Bool.Filter = []interface{}{
-		//	//map[string]map[string]interface{}{
-		//	//	"exists": {"field": []string{"security.allowedRoles", "security.deniedRoles"}},
-		//	//},
-		//	map[string]map[string]interface{}{
-		//		// Skip all documents that do not have baring roles in the allow list
-		//		"terms": {"security.allowedRoles": roles},
-		//	},
-		//}
-		//query.Query.Bool.MustNot = []interface{}{
-		//	map[string]map[string]interface{}{
-		//		// Skip all documents that have baring roles in the deny list
-		//		"terms": {"security.deniedRoles": roles},
-		//	},
-		//}
-		_ = roles
+		// Skip all documents that do not have baring roles in to allow list
+		query.Query.Bool.Filter = append(query.Query.Bool.Filter, map[string]map[string]interface{}{
+			"terms": {"security.allowedRoles": roles},
+		})
+
+		// Skip all documents that have baring roles in to deny list
+		query.Query.Bool.MustNot = append(query.Query.Bool.MustNot, map[string]map[string]interface{}{
+			"terms": {"security.deniedRoles": roles},
+		})
 	}
 
 	// Query MUST filter
@@ -444,4 +437,19 @@ func validElasticResponse(res *esapi.Response, err error) error {
 	}
 
 	return nil
+}
+
+func extractFromSubClaim(sub string) (userID uint64, rr []uint64) {
+	parts := strings.Split(sub, " ")
+	rr = make([]uint64, len(parts)-1)
+	for p := range parts {
+		id, _ := strconv.ParseUint(parts[p], 10, 64)
+		if p == 0 {
+			userID = id
+		} else {
+			rr[p-1] = id
+		}
+	}
+
+	return
 }

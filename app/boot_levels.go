@@ -2,9 +2,9 @@ package app
 
 import (
 	"context"
-	"github.com/cortezaproject/corteza-discovery-indexer/indexer"
-	"github.com/cortezaproject/corteza-discovery-indexer/pkg/healthcheck"
-	"github.com/cortezaproject/corteza-discovery-indexer/searcher"
+	"github.com/cortezaproject/corteza-server-discovery/indexer"
+	"github.com/cortezaproject/corteza-server-discovery/pkg/healthcheck"
+	"github.com/cortezaproject/corteza-server-discovery/searcher"
 )
 
 const (

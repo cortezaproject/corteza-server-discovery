@@ -5,13 +5,13 @@
 
   <div align="center">
 
-  [![DockerHub Downloads Card](https://img.shields.io/docker/pulls/cortezaproject/corteza-discovery-indexer)](https://img.shields.io/docker/pulls/cortezaproject/corteza-discovery-indexer)
-  [![Latest Version Card](https://img.shields.io/github/v/tag/cortezaproject/corteza-discovery-indexer?label=stable%20version)](https://img.shields.io/github/v/tag/cortezaproject/corteza-discovery-indexer?label=stable%20version)
-  [![License Card](https://img.shields.io/github/license/cortezaproject/corteza-discovery-indexer)](https://img.shields.io/github/license/cortezaproject/corteza-discovery-indexer)
+  [![DockerHub Downloads Card](https://img.shields.io/docker/pulls/cortezaproject/corteza-server-discovery)](https://img.shields.io/docker/pulls/cortezaproject/corteza-server-discovery)
+  [![Latest Version Card](https://img.shields.io/github/v/tag/cortezaproject/corteza-server-discovery?label=stable%20version)](https://img.shields.io/github/v/tag/cortezaproject/corteza-server-discovery?label=stable%20version)
+  [![License Card](https://img.shields.io/github/license/cortezaproject/corteza-server-discovery)](https://img.shields.io/github/license/cortezaproject/corteza-server-discovery)
 
-  [![Go Report Card](https://goreportcard.com/badge/github.com/cortezaproject/corteza-discovery-indexer)](https://goreportcard.com/report/github.com/cortezaproject/corteza-discovery-indexer)
+  [![Go Report Card](https://goreportcard.com/badge/github.com/cortezaproject/corteza-server-discovery)](https://goreportcard.com/report/github.com/cortezaproject/corteza-server-discovery)
   [![Build Status](https://drone.crust.tech/api/badges/cortezaproject/corteza/status.svg)](https://drone.crust.tech/cortezaproject/corteza)
-  [![CodeCov Report Card](https://img.shields.io/codecov/c/github/cortezaproject/corteza-discovery-indexer)](https://img.shields.io/codecov/c/github/cortezaproject/corteza-discovery-indexer)
+  [![CodeCov Report Card](https://img.shields.io/codecov/c/github/cortezaproject/corteza-server-discovery)](https://img.shields.io/codecov/c/github/cortezaproject/corteza-server-discovery)
 
   </div>
 </h1>
@@ -59,7 +59,7 @@ Quick references:
 
 ## Upgrading Corteza
 
-[![Latest Version Card](https://img.shields.io/github/v/tag/cortezaproject/corteza-discovery-indexer?label=latest%20stable%20version)](https://img.shields.io/github/v/tag/cortezaproject/corteza-discovery-indexer?label=latest%20stable%20version)
+[![Latest Version Card](https://img.shields.io/github/v/tag/cortezaproject/corteza-server-discovery?label=latest%20stable%20version)](https://img.shields.io/github/v/tag/cortezaproject/corteza-server-discovery?label=latest%20stable%20version)
 
 Refer to the [changelog](https://docs.cortezaproject.org/corteza-docs/2022.3/changelog/index.html) and the [upgrade guide](https://docs.cortezaproject.org/corteza-docs/2022.3/devops-guide/upgrade/index.html) to upgrade your Corteza instance.
 

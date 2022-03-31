@@ -1,7 +1,7 @@
 package rest
 
 import (
-	"github.com/cortezaproject/corteza-discovery-indexer/searcher/rest/handlers"
+	"github.com/cortezaproject/corteza-server-discovery/searcher/rest/handlers"
 	"github.com/go-chi/chi/v5"
 )
 
