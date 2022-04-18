@@ -156,6 +156,7 @@ type (
 	}
 
 	searchParams struct {
+		title         string
 		query         string
 		moduleAggs    []string
 		namespaceAggs []string
@@ -343,6 +344,11 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 		return
 	}
 
+	log.Debug("searching ",
+		zap.String("for", p.title),
+		//zap.String("open search body", buf.String()),
+	)
+
 	// Why set size to 999? default value for size is 10,
 	// so we needed to set value till we add (@todo) pagination to search result
 	if p.from > 0 && p.from >= p.size {
@@ -400,8 +406,11 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 
 	// Print the response status, number of results, and request duration.
 	log.Debug("search completed",
+		zap.String("for", p.title),
 		zap.String("query", sqs.Wrap.Query),
 		zap.String("indexPrefix", index.Prefix.Index.Value),
+		zap.Int("from", p.from),
+		zap.Int("size", p.size),
 		zap.String("status", res.Status()),
 		zap.Int("took", sr.Took),
 		zap.Bool("timedOut", sr.TimedOut),

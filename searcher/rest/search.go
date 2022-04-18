@@ -88,6 +88,7 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 	}
 
 	results, page, err = esSearch(ctx, log, esc, searchParams{
+		title:         "results",
 		query:         searchString,
 		from:          from,
 		size:          size,
@@ -101,6 +102,7 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 
 	if len(searchString) == 0 {
 		aggregation, _, err = esSearch(ctx, log, esc, searchParams{
+			title: "aggregation",
 			//size:          size,
 			dumpRaw:       validDumpRaw,
 			namespaceAggs: namespaceAggs,
@@ -113,6 +115,7 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 
 	// append all namespace agg with counts no matter what
 	nsAggregation, _, err = esSearch(ctx, log, esc, searchParams{
+		title: "nsAggregation",
 		//size:    size,
 		dumpRaw: validDumpRaw,
 		aggOnly: true,
@@ -194,6 +197,7 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 	}
 
 	mAggregation, _, err = esSearch(ctx, log, esc, searchParams{
+		title: "mAggregation",
 		//size:          size,
 		dumpRaw:       validDumpRaw,
 		query:         searchString,
