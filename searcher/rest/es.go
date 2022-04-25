@@ -166,6 +166,8 @@ type (
 
 		aggOnly  bool
 		mAggOnly bool
+
+		allowedRoles map[interface{}]bool
 	}
 )
 
@@ -175,11 +177,18 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 		roles        []string
 		userID       uint64
 		_, claims, _ = jwtauth.FromContext(ctx)
+
+		allowedRoleExist = false
 	)
 
 	if _, has := claims["roles"]; has {
 		if rr, is := claims["roles"].([]interface{}); is {
+
 			for _, role := range rr {
+				if _, ok := p.allowedRoles[role]; ok {
+					allowedRoleExist = true
+				}
+
 				roles = append(roles, fmt.Sprintf("%s", role))
 			}
 		}
@@ -207,15 +216,17 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 		// Authenticated user
 		index.Prefix.Index.Value = "corteza-private-"
 
-		// Skip all documents that do not have baring roles in to allow list
-		query.Query.Bool.Filter = append(query.Query.Bool.Filter, map[string]map[string]interface{}{
-			"terms": {"security.allowedRoles": roles},
-		})
+		if !allowedRoleExist {
+			// Skip all documents that do not have baring roles in to allow list
+			query.Query.Bool.Filter = append(query.Query.Bool.Filter, map[string]map[string]interface{}{
+				"terms": {"security.allowedRoles": roles},
+			})
 
-		// Skip all documents that have baring roles in to deny list
-		query.Query.Bool.MustNot = append(query.Query.Bool.MustNot, map[string]map[string]interface{}{
-			"terms": {"security.deniedRoles": roles},
-		})
+			// Skip all documents that have baring roles in to deny list
+			query.Query.Bool.MustNot = append(query.Query.Bool.MustNot, map[string]map[string]interface{}{
+				"terms": {"security.deniedRoles": roles},
+			})
+		}
 	}
 
 	// Query MUST filter

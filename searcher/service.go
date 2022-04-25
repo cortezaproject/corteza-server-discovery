@@ -39,6 +39,7 @@ type (
 
 var (
 	DefaultLogger *zap.Logger
+	DefaultConfig Config
 
 	DefaultEs        esService
 	DefaultApiClient apiClientService
@@ -46,6 +47,7 @@ var (
 
 func Initialize(_ context.Context, log *zap.Logger, c Config) (err error) {
 	DefaultLogger = log.Named("service")
+	DefaultConfig = c
 
 	DefaultEs, err = es.ES(log, c.ES)
 	if err != nil {

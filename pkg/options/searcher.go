@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/cortezaproject/corteza-server/pkg/options"
 	"os"
+	"strings"
 )
 
 type (
@@ -13,6 +14,9 @@ type (
 		JwtSecret    []byte
 		ClientKey    string
 		ClientSecret string
+
+		// temp fix: remove it once allowed role is fixed on server
+		AllowedRole map[interface{}]bool
 	}
 )
 
@@ -23,6 +27,7 @@ const (
 	envKeyJwtSecret    = discoverySearcher + "JWT_SECRET"
 	envKeyClientKey    = discoverySearcher + "CLIENT_KEY"
 	envKeyClientSecret = discoverySearcher + "CLIENT_SECRET"
+	envKeyAllowedRole  = discoverySearcher + "ALLOWED_ROLE"
 )
 
 func Searcher() (*SearcherOpt, error) {
@@ -53,6 +58,13 @@ func Searcher() (*SearcherOpt, error) {
 
 		if o.ClientSecret = os.Getenv(envKeyClientSecret); o.ClientSecret == "" {
 			return fmt.Errorf("client secret (%s) is empty or missing", envKeyClientSecret)
+		}
+
+		for _, a := range strings.Split(options.EnvString(envKeyAllowedRole, ""), " ") {
+			o.AllowedRole = make(map[interface{}]bool)
+			if a = strings.TrimSpace(a); a != "" {
+				o.AllowedRole[a] = false
+			}
 		}
 
 		//for _, a := range strings.Split(options.EnvString(envKeyEsAddr, "http://localhost:9200"), " ") {

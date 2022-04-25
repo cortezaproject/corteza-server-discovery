@@ -57,6 +57,7 @@ func Search() *search {
 func (s search) SearchResources(ctx context.Context, r *request.SearchResources) (out interface{}, err error) {
 	var (
 		log           = searcher.DefaultLogger
+		allowedRoles  = searcher.DefaultConfig.Searcher.AllowedRole
 		searchString  = r.GetQuery()
 		size          = r.GetSize()
 		from          = r.GetFrom()
@@ -95,6 +96,7 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 		moduleAggs:    moduleAggs,
 		namespaceAggs: namespaceAggs,
 		dumpRaw:       validDumpRaw,
+		allowedRoles:  allowedRoles,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("could not execute search: %w", err)
@@ -107,6 +109,7 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 			dumpRaw:       validDumpRaw,
 			namespaceAggs: namespaceAggs,
 			aggOnly:       true,
+			allowedRoles:  allowedRoles,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("could not execute aggregation search: %w", err)
@@ -117,8 +120,9 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 	nsAggregation, _, err = esSearch(ctx, log, esc, searchParams{
 		title: "nsAggregation",
 		//size:    size,
-		dumpRaw: validDumpRaw,
-		aggOnly: true,
+		dumpRaw:      validDumpRaw,
+		aggOnly:      true,
+		allowedRoles: allowedRoles,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("could not execute namespace aggregation search: %w", err)
@@ -204,6 +208,7 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 		namespaceAggs: namespaceAggs,
 		aggOnly:       true,
 		mAggOnly:      true,
+		allowedRoles:  allowedRoles,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("could not execute module aggregation search: %w", err)
