@@ -682,27 +682,27 @@ func (ri *reIndexer) Watch(ctx context.Context) {
 
 				if req, err = ri.api.Feed(qs); err != nil {
 					ri.log.Error(fmt.Sprintf("failed to prepare feed request: %s", err))
-					return
+					continue
 				}
 
 				if rsp, err = ri.api.HttpClient().Do(req.WithContext(ctx)); err != nil {
 					ri.log.Error(fmt.Sprintf("failed to send feed request: %s", err))
-					return
+					continue
 				}
 
 				if rsp.StatusCode != http.StatusOK {
 					ri.log.Error(fmt.Sprintf("request resulted in an unexpected status '%s' for feed", rsp.Status))
-					return
+					continue
 				}
 
 				if err = json.NewDecoder(rsp.Body).Decode(feeds); err != nil {
 					ri.log.Error(fmt.Sprintf("failed to decode feed resources: %s", err))
-					return
+					continue
 				}
 
 				if err = rsp.Body.Close(); err != nil {
 					ri.log.Error(fmt.Sprintf("failed to close feed response body: %s", err))
-					return
+					continue
 				}
 
 				// Update time after successful request
@@ -712,7 +712,7 @@ func (ri *reIndexer) Watch(ctx context.Context) {
 					err = ri.feedReindexChanges(ctx, esb, "private", feeds.Response.ActivityLogs)
 					if err != nil {
 						ri.log.Error(fmt.Sprintf("failed to update indexes for feed changes: %s", err))
-						return
+						continue
 					}
 				} else {
 					ri.log.Debug(fmt.Sprintf("No feed changes since last %d seconds; current time: %s", timeOut, now.UTC().String()))
