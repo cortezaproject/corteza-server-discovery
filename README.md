@@ -10,7 +10,6 @@
   [![License Card](https://img.shields.io/github/license/cortezaproject/corteza-discovery-indexer)](https://img.shields.io/github/license/cortezaproject/corteza-discovery-indexer)
 
   [![Go Report Card](https://goreportcard.com/badge/github.com/cortezaproject/corteza-discovery-indexer)](https://goreportcard.com/report/github.com/cortezaproject/corteza-discovery-indexer)
-  [![Build Status](https://drone.crust.tech/api/badges/cortezaproject/corteza/status.svg)](https://drone.crust.tech/cortezaproject/corteza)
   [![CodeCov Report Card](https://img.shields.io/codecov/c/github/cortezaproject/corteza-discovery-indexer)](https://img.shields.io/codecov/c/github/cortezaproject/corteza-discovery-indexer)
 
   </div>
