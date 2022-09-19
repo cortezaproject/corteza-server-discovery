@@ -219,131 +219,131 @@ func conv(sr *esSearchResponse, aggregation *esSearchResponse, noHits bool, modu
 		out.Aggregations = append(out.Aggregations, mAggregation)
 	}
 
-	if !noHits {
-	hits:
-		for _, h := range sr.Hits.Hits {
-			aux := map[string]interface{}{}
-			if err = json.Unmarshal(h.Source, &aux); err != nil {
+	// if !noHits {
+hits:
+	for _, h := range sr.Hits.Hits {
+		aux := map[string]interface{}{}
+		if err = json.Unmarshal(h.Source, &aux); err != nil {
+			return
+		}
+
+		resType := cast.ToString(aux["resourceType"])
+		delete(aux, "resourceType")
+		switch resType {
+		case "system:user":
+			aux["id"] = aux["userID"]
+			delete(aux, "userID")
+
+		case "compose:record":
+			// @todo: Remove below line and find proper solution for searsia as value needs to be in json
+			ssVal := make(map[string]interface{})
+			// @todo refactor record related values
+			type (
+				created struct {
+					At *time.Time `json:"at,omitempty"`
+					By string     `json:"by,omitempty"`
+				}
+
+				record struct {
+					Created struct {
+						At *time.Time `json:"at,omitempty"`
+						By *createdBy `json:"by,omitempty"`
+					} `json:"created"`
+					Module struct {
+						Name     string `json:"name"`
+						Handle   string `json:"handle"`
+						ModuleId uint64 `json:"moduleId,string"`
+					} `json:"module"`
+					Namespace struct {
+						Name        string `json:"name"`
+						Handle      string `json:"handle"`
+						NamespaceId uint64 `json:"namespaceId,string"`
+					} `json:"namespace"`
+					Values      map[string]interface{} `json:"values"`
+					ValueLabels map[string]string      `json:"valueLabels"`
+				}
+			)
+
+			var r record
+			if err = json.Unmarshal(h.Source, &r); err != nil {
 				return
 			}
-
-			resType := cast.ToString(aux["resourceType"])
-			delete(aux, "resourceType")
-			switch resType {
-			case "system:user":
-				aux["id"] = aux["userID"]
-				delete(aux, "userID")
-
-			case "compose:record":
-				// @todo: Remove below line and find proper solution for searsia as value needs to be in json
-				ssVal := make(map[string]interface{})
-				// @todo refactor record related values
-				type (
-					created struct {
-						At *time.Time `json:"at,omitempty"`
-						By string     `json:"by,omitempty"`
-					}
-
-					record struct {
-						Created struct {
-							At *time.Time `json:"at,omitempty"`
-							By *createdBy `json:"by,omitempty"`
-						} `json:"created"`
-						Module struct {
-							Name     string `json:"name"`
-							Handle   string `json:"handle"`
-							ModuleId uint64 `json:"moduleId,string"`
-						} `json:"module"`
-						Namespace struct {
-							Name        string `json:"name"`
-							Handle      string `json:"handle"`
-							NamespaceId uint64 `json:"namespaceId,string"`
-						} `json:"namespace"`
-						Values      map[string]interface{} `json:"values"`
-						ValueLabels map[string]string      `json:"valueLabels"`
-					}
-				)
-
-				var r record
-				if err = json.Unmarshal(h.Source, &r); err != nil {
-					return
+			type valueJson struct {
+				Name  string      `json:"name"`
+				Label string      `json:"label"`
+				Value interface{} `json:"value"`
+			}
+			key := fmt.Sprintf("%d-%d", r.Namespace.NamespaceId, r.Module.ModuleId)
+			var (
+				slice []valueJson
+				uc    = created{
+					At: r.Created.At,
+					By: getCreatedBy(r.Created.By),
 				}
-				type valueJson struct {
-					Name  string      `json:"name"`
-					Label string      `json:"label"`
-					Value interface{} `json:"value"`
-				}
-				key := fmt.Sprintf("%d-%d", r.Namespace.NamespaceId, r.Module.ModuleId)
-				var (
-					slice []valueJson
-					uc    = created{
-						At: r.Created.At,
-						By: getCreatedBy(r.Created.By),
-					}
-				)
+			)
 
-				if val, is := moduleMeta[key]; is {
-					for _, f := range val {
+			if val, is := moduleMeta[key]; is {
+				for _, f := range val {
+					slice = append(slice, valueJson{
+						Name:  f,
+						Label: r.ValueLabels[f],
+						Value: sanitize(r.Values[f]),
+					})
+
+					if vv, ok := r.Values[f].([]interface{}); ok {
+						if len(vv) > 0 {
+							ssVal[f] = sanitize(vv[0])
+						}
+					}
+				}
+			} else {
+				for k, v := range r.Values {
+					// @todo hardcoded value
+					sanitizedVal := sanitize(v)
+					if len(slice) < 5 && sanitizedVal != nil {
 						slice = append(slice, valueJson{
-							Name:  f,
-							Label: r.ValueLabels[f],
-							Value: sanitize(r.Values[f]),
+							Name:  k,
+							Label: r.ValueLabels[k],
+							Value: sanitizedVal,
 						})
 
-						if vv, ok := r.Values[f].([]interface{}); ok {
+						if vv, ok := v.([]interface{}); ok {
 							if len(vv) > 0 {
-								ssVal[f] = sanitize(vv[0])
-							}
-						}
-					}
-				} else {
-					for k, v := range r.Values {
-						// @todo hardcoded value
-						sanitizedVal := sanitize(v)
-						if len(slice) < 5 && sanitizedVal != nil {
-							slice = append(slice, valueJson{
-								Name:  k,
-								Label: r.ValueLabels[k],
-								Value: sanitizedVal,
-							})
-
-							if vv, ok := v.([]interface{}); ok {
-								if len(vv) > 0 {
-									ssVal[k] = sanitize(vv[0])
-								}
+								ssVal[k] = sanitize(vv[0])
 							}
 						}
 					}
 				}
-				aux["created"] = uc
-				aux["customValues"] = ssVal
-				aux["values"] = slice
-				aux["@id"] = aux["_id"]
-				delete(aux, "_id")
-				delete(aux, "valueLabels")
-
-			case "compose:namespace":
-				aux["@id"] = aux["_id"]
-				delete(aux, "_id")
-				delete(aux, "Namespace")
-
-			case "compose:module":
-				aux["@id"] = aux["_id"]
-				delete(aux, "_id")
-				delete(aux, "Namespace")
-				delete(aux, "Module")
-
-			default:
-				continue hits
 			}
+			aux["created"] = uc
+			aux["customValues"] = ssVal
+			aux["values"] = slice
+			aux["@id"] = aux["_id"]
+			delete(aux, "_id")
+			delete(aux, "valueLabels")
 
-			out.Hits = append(out.Hits, cdHit{
-				Type:  resType,
-				Value: aux,
-			})
+		case "compose:namespace":
+			aux["@id"] = aux["_id"]
+			delete(aux, "_id")
+			delete(aux, "Namespace")
+
+		case "compose:module":
+			aux["@id"] = aux["_id"]
+			delete(aux, "_id")
+			delete(aux, "Namespace")
+			delete(aux, "Module")
+
+		default:
+			continue hits
 		}
-		out.TotalHits = len(out.Hits)
+
+		out.Hits = append(out.Hits, cdHit{
+			Type:  resType,
+			Value: aux,
+		})
 	}
+	out.TotalHits = len(out.Hits)
+	// }
 	return
 }
 
