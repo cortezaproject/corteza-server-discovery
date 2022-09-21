@@ -1,14 +1,12 @@
 package server
 
 import (
-	"fmt"
+	"github.com/cortezaproject/corteza-server-discovery/pkg/auth"
 	"github.com/cortezaproject/corteza-server-discovery/pkg/healthcheck"
 	"github.com/cortezaproject/corteza-server-discovery/pkg/options"
 	"github.com/cortezaproject/corteza-server/pkg/api"
 	"github.com/cortezaproject/corteza-server/pkg/version"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/jwtauth"
 	"go.uber.org/zap"
 	"net/http"
 	"path"
@@ -41,13 +39,8 @@ func activeRoutes(log *zap.Logger, mountable []func(r chi.Router), envOpt option
 		// Base middleware, CORS, RealIP, RequestID, context-logger
 		r.Use(BaseMiddleware(envOpt.IsProduction(), log)...)
 
-		// Verifies JWT in headers, cookies, ... @todo
-		//r.Use(auth.HttpTokenVerifier)
-		if len(searcherOpt.JwtSecret) == 0 {
-			log.Warn(fmt.Sprintf("JWT secret not set, access to private indexes disabled"))
-		} else {
-			r.Use(jwtauth.Verifier(jwtauth.New(jwt.SigningMethodHS512.Alg(), searcherOpt.JwtSecret, nil)))
-		}
+		// Verifies JWT in headers, cookies, ...
+		r.Use(auth.HttpTokenVerifier)
 
 		for _, mount := range mountable {
 			mount(r)

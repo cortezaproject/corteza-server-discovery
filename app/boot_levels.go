@@ -2,7 +2,9 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"github.com/cortezaproject/corteza-server-discovery/indexer"
+	"github.com/cortezaproject/corteza-server-discovery/pkg/auth"
 	"github.com/cortezaproject/corteza-server-discovery/pkg/healthcheck"
 	"github.com/cortezaproject/corteza-server-discovery/searcher"
 )
@@ -65,6 +67,10 @@ func (app *CortezaDiscoveryApp) InitServices(ctx context.Context) (err error) {
 
 	if err = app.Provision(ctx); err != nil {
 		return err
+	}
+
+	if auth.HttpTokenVerifier, err = auth.TokenVerifierMiddlewareWithSecretSigner(string(app.Opt.Searcher.JwtSecret)); err != nil {
+		return fmt.Errorf("could not set token verifier")
 	}
 
 	if app.Opt.Indexer.Enabled {
