@@ -48,6 +48,15 @@ type (
 		Fields []string `json:"fields"`
 		// @todo? TBD? excludeModuleFields, includeModuleFields <- if passed filter module field accordingly.
 	}
+
+	nsMeta struct {
+		Name   string
+		Handle string
+	}
+	mMeta struct {
+		Name   string
+		Handle string
+	}
 )
 
 func Search() *search {
@@ -79,8 +88,8 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 		mResponse  cResponse
 		moduleMap  = make(map[string][]string)
 
-		nsHandleMap = make(map[string]string)
-		mHandleMap  = make(map[string]string)
+		nsHandleMap = make(map[string]nsMeta)
+		mHandleMap  = make(map[string]mMeta)
 	)
 
 	esc, err := searcher.DefaultEs.Client()
@@ -138,7 +147,7 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 				Key      string `json:"key"`
 				DocCount int    `json:"doc_count"`
 			})
-			for _, bucket := range results.Aggregations.Namespace.Buckets {
+			for _, bucket := range results.Aggregations.Namespace.Namespace.Buckets {
 				nsMap[bucket.Key] = bucket
 			}
 
@@ -146,7 +155,7 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 				Key      string `json:"key"`
 				DocCount int    `json:"doc_count"`
 			}
-			for _, bucket := range nsAggregation.Aggregations.Namespace.Buckets {
+			for _, bucket := range nsAggregation.Aggregations.Namespace.Namespace.Buckets {
 				val, ok := nsMap[bucket.Key]
 				if ok {
 					val.DocCount = nsMap[bucket.Key].DocCount
@@ -157,7 +166,7 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 				buckets = append(buckets, val)
 			}
 
-			results.Aggregations.Namespace.Buckets = buckets
+			results.Aggregations.Namespace.Namespace.Buckets = buckets
 		}
 	}
 	// append namespace agg response which are not in es response
@@ -170,7 +179,7 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 			Key      string `json:"key"`
 			DocCount int    `json:"doc_count"`
 		}
-		for _, b := range results.Aggregations.Namespace.Buckets {
+		for _, b := range results.Aggregations.Namespace.Namespace.Buckets {
 			nsMap = map[string]struct {
 				Key      string `json:"key"`
 				DocCount int    `json:"doc_count"`
@@ -196,7 +205,7 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 		}
 
 		if len(bb) > 0 {
-			results.Aggregations.Namespace.Buckets = bb
+			results.Aggregations.Namespace.Namespace.Buckets = bb
 		}
 	}
 
@@ -229,7 +238,7 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 			Key      string `json:"key"`
 			DocCount int    `json:"doc_count"`
 		}
-		for _, b := range results.Aggregations.Module.Buckets {
+		for _, b := range results.Aggregations.Module.Module.Buckets {
 			mMap = map[string]struct {
 				Key      string `json:"key"`
 				DocCount int    `json:"doc_count"`
@@ -255,7 +264,7 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 		}
 
 		if len(bb) > 0 {
-			results.Aggregations.Module.Buckets = bb
+			results.Aggregations.Module.Module.Buckets = bb
 		}
 	}
 
@@ -284,7 +293,10 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 
 		for _, s := range nsResponse.Response.Set {
 			// Get the module handles for aggs response
-			nsHandleMap[s.Name] = s.Slug
+			nsHandleMap[s.Slug] = nsMeta{
+				Name:   s.Name,
+				Handle: s.Slug,
+			}
 			if mReq, err = searcher.DefaultApiClient.Modules(s.NamespaceID); err != nil {
 				return nil, fmt.Errorf("failed to prepare module meta request: %w", err)
 			}
@@ -303,7 +315,11 @@ func (s search) SearchResources(ctx context.Context, r *request.SearchResources)
 
 			for _, m := range mResponse.Response.Set {
 				// Get the module handles for aggs response
-				mHandleMap[m.Name] = m.Handle
+				mHandleMap[m.Handle] = mMeta{
+					Name:   m.Name,
+					Handle: m.Slug,
+				}
+
 				var (
 					meta moduleMeta
 					key  = fmt.Sprintf("%d-%d", s.NamespaceID, m.ModuleID)
