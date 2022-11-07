@@ -63,7 +63,7 @@ type (
 )
 
 // conv converts results from the backend into corteza-discovery (jsonld-ish) format
-func conv(sr *esSearchResponse, aggregation *esSearchResponse, noHits bool, moduleMeta map[string][]string, nsHandleMap map[string]string, mHandleMap map[string]string, page pagination) (out *cdResults, err error) {
+func conv(sr *esSearchResponse, aggregation *esSearchResponse, noHits bool, moduleMeta map[string][]string, nsHandleMap map[string]nsMeta, mHandleMap map[string]mMeta, page pagination) (out *cdResults, err error) {
 	if sr == nil {
 		return
 	}
@@ -83,7 +83,6 @@ func conv(sr *esSearchResponse, aggregation *esSearchResponse, noHits bool, modu
 	nsTotalHits := make(map[string]cdAggregationHits)
 	mTotalHits := make(map[string]cdAggregationHits)
 
-	_ = nsTotalHits
 	aggsRes := sr.Aggregations
 	if aggregation != nil {
 		aggsRes = aggregation.Aggregations
@@ -161,16 +160,20 @@ func conv(sr *esSearchResponse, aggregation *esSearchResponse, noHits bool, modu
 		Hits:         0,
 		ResourceName: []cdAggregationHits{},
 	}
-	for _, bucket := range aggsRes.Namespace.Buckets {
+	for _, bucket := range aggsRes.Namespace.Namespace.Buckets {
 		resourceName := bucket.Key
 
 		if val, is := nsTotalHits[resourceName]; is {
 			val.Hits += bucket.DocCount
 			nsTotalHits[resourceName] = val
 		} else {
+			var name string
+			if nsHandleMap != nil {
+				name = nsHandleMap[resourceName].Name
+			}
 			nsTotalHits[resourceName] = cdAggregationHits{
-				Name:  resourceName,
-				Label: nsHandleMap[resourceName],
+				Name:  name,
+				Label: resourceName,
 				Hits:  bucket.DocCount,
 			}
 		}
@@ -193,16 +196,20 @@ func conv(sr *esSearchResponse, aggregation *esSearchResponse, noHits bool, modu
 		ResourceName: []cdAggregationHits{},
 	}
 
-	for _, bucket := range aggsRes.Module.Buckets {
+	for _, bucket := range aggsRes.Module.Module.Buckets {
 		resourceName := bucket.Key
 
 		if val, is := mTotalHits[resourceName]; is {
 			val.Hits += bucket.DocCount
 			mTotalHits[resourceName] = val
 		} else {
+			var name string
+			if mHandleMap != nil {
+				name = mHandleMap[resourceName].Name
+			}
 			mTotalHits[resourceName] = cdAggregationHits{
-				Name:  resourceName,
-				Label: mHandleMap[resourceName],
+				Name:  name,
+				Label: resourceName,
 				Hits:  bucket.DocCount,
 			}
 		}

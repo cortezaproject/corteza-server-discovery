@@ -17,7 +17,8 @@ import (
 
 type (
 	// EsSearchAggrTerms is aggregations parameter for es search api.
-	EsSearchAggrTerms map[string]esSearchAggr
+	EsSearchAggrTerms       map[string]esSearchAggr
+	EsSearchNestedAggrTerms map[string]esSearchNestedAggr
 
 	esSearchParamsIndex struct {
 		Prefix struct {
@@ -34,18 +35,28 @@ type (
 	}
 
 	esDisMax struct {
+		TieBreaker float64       `json:"tie_breaker,omitempty"`
+		Boost      float64       `json:"boost,omitempty"`
+		Queries    []interface{} `json:"queries,omitempty"`
+	}
+
+	esDisMaxWrap struct {
+		Wrap esDisMax `json:"dis_max,omitempty"`
+	}
+
+	esNestedDisMax struct {
 		Wrap struct {
-			TieBreaker float64       `json:"tie_breaker,omitempty"`
-			Boost      float64       `json:"boost,omitempty"`
-			Queries    []interface{} `json:"queries,omitempty"`
-		} `json:"dis_max,omitempty"`
+			IgnoreUnmapped bool         `json:"ignore_unmapped"`
+			Path           string       `json:"path,omitempty"`
+			Query          esDisMaxWrap `json:"query,omitempty"`
+		} `json:"nested,omitempty"`
 	}
 
 	esMultiMatch struct {
 		Wrap struct {
 			Query string `json:"query"`
 			Type  string `json:"type"`
-			//Operator string   `json:"operator"`
+			// Operator string   `json:"operator"`
 			Fields []string `json:"fields"`
 		} `json:"multi_match"`
 	}
@@ -62,11 +73,11 @@ type (
 			} `json:"bool,omitempty"`
 		} `json:"query"`
 
-		Aggregations EsSearchAggrTerms `json:"aggs,omitempty"`
+		Aggregations EsSearchNestedAggrTerms `json:"aggs,omitempty"`
 	}
 
 	esSearchAggrTerm struct {
-		Field string `json:"field"`
+		Field string `json:"field,omitempty"`
 		Size  int    `json:"size,omitempty"`
 	}
 
@@ -75,10 +86,24 @@ type (
 		Size    int         `json:"size,omitempty"`
 	}
 
+	esSearchNestedAggs struct {
+		Path string `json:"path,omitempty"`
+	}
+
 	esSearchAggr struct {
-		Terms        esSearchAggrTerm  `json:"terms"`
-		Aggregations EsSearchAggrTerms `json:"aggs,omitempty"`
-		//Composite *esSearchAggrComposite `json:"composite"`
+		Nested       esSearchNestedAggs `json:"nested,omitempty"`
+		Terms        esSearchAggrTerm   `json:"terms,omitempty"`
+		Aggregations EsSearchAggrTerms  `json:"aggs,omitempty"`
+		// Composite *esSearchAggrComposite `json:"composite"`
+	}
+
+	esSearchNestedAggrTerm struct {
+		Terms esSearchAggrTerm `json:"terms,omitempty"`
+	}
+	esSearchNestedAggr struct {
+		Nested       esSearchNestedAggs                `json:"nested,omitempty"`
+		Aggregations map[string]esSearchNestedAggrTerm `json:"aggs,omitempty"`
+		// Composite *esSearchAggrComposite `json:"composite"`
 	}
 
 	esSearchResponse struct {
@@ -105,53 +130,60 @@ type (
 	}
 
 	esSearchAggregations struct {
-		//Resource struct {
-		//	DocCountErrorUpperBound int `json:"-"`
-		//	SumOtherDocCount        int `json:"-"`
-		//	Buckets                 []struct {
-		//		Key          string `json:"key"`
-		//		DocCount     int    `json:"doc_count"`
-		//		ResourceName struct {
-		//			DocCountErrorUpperBound int `json:"-"`
-		//			SumOtherDocCount        int `json:"-"`
-		//			Buckets                 []struct {
-		//				Key      string `json:"key"`
-		//				DocCount int    `json:"doc_count"`
-		//			} `json:"buckets"`
-		//		} `json:"resourceName"`
-		//		Namespaces struct {
-		//			DocCountErrorUpperBound int `json:"-"`
-		//			SumOtherDocCount        int `json:"-"`
-		//			Buckets                 []struct {
-		//				Key      string `json:"key"`
-		//				DocCount int    `json:"doc_count"`
-		//			} `json:"buckets"`
-		//		} `json:"namespaces"`
-		//		Modules struct {
-		//			DocCountErrorUpperBound int `json:"-"`
-		//			SumOtherDocCount        int `json:"-"`
-		//			Buckets                 []struct {
-		//				Key      string `json:"key"`
-		//				DocCount int    `json:"doc_count"`
-		//			} `json:"buckets"`
-		//		} `json:"modules"`
-		//	} `json:"buckets"`
-		//} `json:"resource"`
+		Resource struct {
+			DocCountErrorUpperBound int `json:"-"`
+			SumOtherDocCount        int `json:"-"`
+			Buckets                 []struct {
+				Key          string `json:"key"`
+				DocCount     int    `json:"doc_count"`
+				ResourceName struct {
+					DocCountErrorUpperBound int `json:"-"`
+					SumOtherDocCount        int `json:"-"`
+					Buckets                 []struct {
+						Key      string `json:"key"`
+						DocCount int    `json:"doc_count"`
+					} `json:"buckets"`
+				} `json:"resourceName"`
+				Namespaces struct {
+					DocCountErrorUpperBound int `json:"-"`
+					SumOtherDocCount        int `json:"-"`
+					Buckets                 []struct {
+						Key      string `json:"key"`
+						DocCount int    `json:"doc_count"`
+					} `json:"buckets"`
+				} `json:"namespaces"`
+				Modules struct {
+					DocCountErrorUpperBound int `json:"-"`
+					SumOtherDocCount        int `json:"-"`
+					Buckets                 []struct {
+						Key      string `json:"key"`
+						DocCount int    `json:"doc_count"`
+					} `json:"buckets"`
+				} `json:"modules"`
+			} `json:"buckets"`
+		} `json:"resource"`
 		Module struct {
-			DocCountErrorUpperBound int `json:"doc_count_error_upper_bound"`
-			SumOtherDocCount        int `json:"sum_other_doc_count"`
-			Buckets                 []struct {
-				Key      string `json:"key"`
-				DocCount int    `json:"doc_count"`
-			} `json:"buckets"`
+			DocCount int `json:"doc_count"`
+			Module   struct {
+				DocCountErrorUpperBound int `json:"doc_count_error_upper_bound"`
+				SumOtherDocCount        int `json:"sum_other_doc_count"`
+				Buckets                 []struct {
+					Key      string `json:"key"`
+					DocCount int    `json:"doc_count"`
+				} `json:"buckets"`
+			} `json:"module"`
 		} `json:"module"`
+
 		Namespace struct {
-			DocCountErrorUpperBound int `json:"doc_count_error_upper_bound"`
-			SumOtherDocCount        int `json:"sum_other_doc_count"`
-			Buckets                 []struct {
-				Key      string `json:"key"`
-				DocCount int    `json:"doc_count"`
-			} `json:"buckets"`
+			DocCount  int `json:"doc_count"`
+			Namespace struct {
+				DocCountErrorUpperBound int `json:"doc_count_error_upper_bound"`
+				SumOtherDocCount        int `json:"sum_other_doc_count"`
+				Buckets                 []struct {
+					Key      string `json:"key"`
+					DocCount int    `json:"doc_count"`
+				} `json:"buckets"`
+			} `json:"namespace"`
 		} `json:"namespace"`
 	}
 
@@ -201,7 +233,7 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 
 	noQ := len(p.query) == 0
 	noNSFilter := len(p.namespaceAggs) == 0
-	//noMFilter := len(p.moduleAggs) == 0
+	// noMFilter := len(p.moduleAggs) == 0
 	sqs := esSimpleQueryString{}
 	sqs.Wrap.Query = p.query
 
@@ -233,62 +265,73 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 	query.Query.Bool.Must = []interface{}{index}
 
 	// Aggregations V1.0
-	//if len(p.aggregations) > 0 {
+	// if len(p.aggregations) > 0 {
 	//	query.Aggregations = make(map[string]esSearchAggr)
 	//
 	//	for _, a := range p.aggregations {
 	//		query.Aggregations[a] = esSearchAggr{esSearchAggrTerm{Field: a + ".keyword"}}
 	//	}
-	//}
+	// }
 
 	// Search string filter
 	if !noQ {
 		sqs.Wrap.Query = fmt.Sprintf("%s*", sqs.Wrap.Query)
 		query.Query.Bool.Must = append(query.Query.Bool.Must, sqs)
-		//query.Query.DisMax.Queries = append(query.Query.DisMax.Queries, sqs)
+		// query.Query.DisMax.Queries = append(query.Query.DisMax.Queries, sqs)
 	}
 
 	var (
-		mm = esMultiMatch{}
-		dd esDisMax
+		mm   = esMultiMatch{}
+		mdd  esNestedDisMax
+		nsdd esNestedDisMax
 	)
 	for _, mAggs := range p.moduleAggs {
 		mm.Wrap.Query = mAggs
 		mm.Wrap.Type = "cross_fields"
-		mm.Wrap.Fields = []string{"module.name.keyword"}
-		//query.Query.Bool.Must = append(query.Query.Bool.Must, mm)
-		//query.Query.DisMax.Queries = append(query.Query.DisMax.Queries, mm)
+		mm.Wrap.Fields = []string{"module.name"}
+		// query.Query.Bool.Must = append(query.Query.Bool.Must, mm)
+		// query.Query.DisMax.Queries = append(query.Query.DisMax.Queries, mm)
 
-		dd.Wrap.Queries = append(dd.Wrap.Queries, mm)
+		// dd.Wrap.Queries = append(dd.Wrap.Queries, mm)
+		mdd.Wrap.Path = "module"
+		nsdd.Wrap.IgnoreUnmapped = true
+		mdd.Wrap.Query.Wrap.Queries = append(mdd.Wrap.Query.Wrap.Queries, mm)
+	}
+
+	if len(mdd.Wrap.Query.Wrap.Queries) > 0 {
+		query.Query.Bool.Must = append(query.Query.Bool.Must, mdd)
 	}
 
 	// no need now since we are adding below as filter
-	if p.aggOnly {
-		for _, nAggs := range p.namespaceAggs {
-			mm.Wrap.Query = nAggs
-			mm.Wrap.Type = "cross_fields"
-			mm.Wrap.Fields = []string{"namespace.name.keyword"}
-			//query.Query.Bool.Must = append(query.Query.Bool.Must, mm)
-			//query.Query.DisMax.Queries = append(query.Query.DisMax.Queries, mm)
+	// if p.aggOnly {
+	for _, nAggs := range p.namespaceAggs {
+		mm.Wrap.Query = nAggs
+		mm.Wrap.Type = "cross_fields"
+		mm.Wrap.Fields = []string{"namespace.name"}
+		// query.Query.Bool.Must = append(query.Query.Bool.Must, mm)
+		// query.Query.DisMax.Queries = append(query.Query.DisMax.Queries, mm)
 
-			dd.Wrap.Queries = append(dd.Wrap.Queries, mm)
-		}
+		// dd.Wrap.Queries = append(dd.Wrap.Queries, mm)
+		nsdd.Wrap.Path = "namespace"
+		nsdd.Wrap.IgnoreUnmapped = true
+		nsdd.Wrap.Query.Wrap.Queries = append(nsdd.Wrap.Query.Wrap.Queries, mm)
+	}
+	// }
+
+	if len(nsdd.Wrap.Query.Wrap.Queries) > 0 {
+		query.Query.Bool.Must = append(query.Query.Bool.Must, nsdd)
 	}
 
-	if len(dd.Wrap.Queries) > 0 {
-		query.Query.Bool.Must = append(query.Query.Bool.Must, dd)
-	}
-
-	if !p.aggOnly && !noNSFilter {
-		nsf := make(map[string]interface{})
-		nsf["terms"] = map[string][]string{
-			"namespace.name.keyword": p.namespaceAggs,
-		}
-		query.Query.Bool.Filter = append(query.Query.Bool.Filter, nsf)
-	}
+	// if !p.aggOnly && !noNSFilter {
+	// 	nsf := make(map[string]interface{})
+	// 	nsf["terms"] = map[string][]string{
+	// 		"namespace.name.keyword": p.namespaceAggs,
+	// 	}
+	// 	query.Query.Bool.Filter = append(query.Query.Bool.Filter, nsf)
+	// }
 
 	// Aggregations V1.0 Improved
-	//if len(p.aggregations) > 0 {
+	// if len(p.aggregations) > 0 {
 	//	for _, a := range p.aggregations {
 	//		if len(a) > 0 {
 	//			sqs = esSimpleQueryString{}
@@ -296,29 +339,41 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 	//			query.Query.Bool.Must = append(query.Query.Bool.Must, sqs)
 	//		}
 	//	}
-	//}
+	// }
 
-	//if noQ == 0 && len(p.moduleAggs) == 0 && len(p.namespaceAggs) == 0 {
+	// if noQ == 0 && len(p.moduleAggs) == 0 && len(p.namespaceAggs) == 0 {
 	//	query.Query.DisMax.Queries = append(query.Query.DisMax.Queries, index)
-	//}
-	query.Aggregations = make(map[string]esSearchAggr)
-	query.Aggregations["namespace"] = esSearchAggr{
-		Terms: esSearchAggrTerm{
-			Field: "namespace.name.keyword",
-			Size:  999,
+	// }
+	query.Aggregations = make(map[string]esSearchNestedAggr)
+	query.Aggregations["namespace"] = esSearchNestedAggr{
+		Nested: esSearchNestedAggs{Path: "namespace"},
+		Aggregations: map[string]esSearchNestedAggrTerm{
+			"namespace": {
+				Terms: esSearchAggrTerm{
+					// Field: "namespace.name.keyword",
+					Field: "namespace.handle",
+					Size:  999,
+				},
+			},
 		},
 	}
 
 	if !noQ || !noNSFilter {
-		query.Aggregations["module"] = esSearchAggr{
-			Terms: esSearchAggrTerm{
-				Field: "module.name.keyword",
-				Size:  999,
+		query.Aggregations["module"] = esSearchNestedAggr{
+			Nested: esSearchNestedAggs{Path: "module"},
+			Aggregations: map[string]esSearchNestedAggrTerm{
+				"module": {
+					Terms: esSearchAggrTerm{
+						// Field: "module.name.keyword",
+						Field: "module.handle",
+						Size:  999,
+					},
+				},
 			},
 		}
 	}
 
-	//query.Aggregations["resource"] = esSearchAggr{
+	// query.Aggregations["resource"] = esSearchAggr{
 	//	Terms: esSearchAggrTerm{
 	//		Field: "resourceType.keyword",
 	//		Size:  999,
@@ -343,12 +398,12 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 	//			},
 	//		},
 	//	},
-	//}
+	// }
 
 	// Aggregations V2.0
-	//if len(p.aggregations) > 0 {
+	// if len(p.aggregations) > 0 {
 	//	query.Aggregations = (Aggregations{}).encodeTerms(p.aggregations)
-	//}
+	// }
 
 	if err = json.NewEncoder(&buf).Encode(query); err != nil {
 		err = fmt.Errorf("could not encode query: %q", err)
@@ -357,7 +412,7 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 
 	log.Debug("searching ",
 		zap.String("for", p.title),
-		//zap.String("open search body", buf.String()),
+		// zap.String("open search body", buf.String()),
 	)
 
 	// Why set size to 999? default value for size is 10,
@@ -375,10 +430,10 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 		esc.Search.WithContext(ctx),
 		esc.Search.WithBody(&buf),
 		esc.Search.WithTrackTotalHits(true),
-		//esc.Search.WithScroll(),
+		// esc.Search.WithScroll(),
 		esc.Search.WithSize(p.size),
 		esc.Search.WithFrom(p.from),
-		//esc.Search.WithExplain(true), // debug
+		// esc.Search.WithExplain(true), // debug
 	}
 
 	if p.dumpRaw {
@@ -427,8 +482,8 @@ func esSearch(ctx context.Context, log *zap.Logger, esc *elasticsearch.Client, p
 		zap.Bool("timedOut", sr.TimedOut),
 		zap.Int("hits", sr.Hits.Total.Value),
 		zap.String("hitsRelation", sr.Hits.Total.Relation),
-		zap.Int("namespaceAggs", len(sr.Aggregations.Namespace.Buckets)),
-		zap.Int("moduleAggs", len(sr.Aggregations.Module.Buckets)),
+		zap.Int("namespaceAggs", len(sr.Aggregations.Namespace.Namespace.Buckets)),
+		zap.Int("moduleAggs", len(sr.Aggregations.Module.Module.Buckets)),
 	)
 
 	return
